@@ -1,0 +1,147 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{C75FB78E-110C-4844-B66A-58444F73DCC7}</ProjectGuid>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <Keyword>ManagedCProj</Keyword>
+    <RootNamespace>couchdb</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CLRSupport>false</CLRSupport>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>D:\Projects\workspace\utils\couchfine++\include;D:\Projects\workspace\utils\curl-7.21.6\include;D:\Projects\workspace\utils\couchfine++\external;$(BOOST_ROOT);$(IncludePath)</IncludePath>
+    <LibraryPath>D:\Projects\workspace\utils\curl-7.21.6\lib\DLL-Debug;$(BOOST_ROOT)\bin.v2\libs\regex\build\msvc-10.0\debug\link-static\threading-multi</LibraryPath>
+    <IntDir>V:\temp\couchfine++\$(Configuration)\</IntDir>
+    <OutDir>$(ProjectDir)$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IntDir>V:\temp\couchfine++\$(Configuration)\</IntDir>
+    <IncludePath>D:\Projects\workspace\utils\couchfine++\include;D:\Projects\workspace\utils\curl-7.21.6\include;$(BOOST_ROOT);D:\Projects\workspace\utils\couchfine++\external;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\Projects\workspace\utils\curl-7.21.6\lib\DLL-Release;$(BOOST_ROOT)\bin.v2\libs\filesystem\build\msvc-10.0\release\link-static\threading-multi;$(BOOST_ROOT)\bin.v2\libs\regex\build\msvc-10.0\release\link-static\threading-multi;$(BOOST_ROOT)\bin.v2\libs\system\build\msvc-10.0\release\link-static\threading-multi;D:\Program Files\Microsoft Visual Studio 9.0\VC\lib;D:\Program Files\Microsoft SDKs\Windows\v7.0A\Lib</LibraryPath>
+    <OutDir>$(ProjectDir)$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <MinimalRebuild>true</MinimalRebuild>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
+    </Link>
+    <Lib>
+      <AdditionalDependencies>libcurl.lib</AdditionalDependencies>
+      <TreatLibWarningAsErrors>false</TreatLibWarningAsErrors>
+    </Lib>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+      <Message>
+      </Message>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>LIBCMT;libcpmt</IgnoreSpecificDefaultLibraries>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="external\plustache\include\context.hpp" />
+    <ClInclude Include="external\plustache\include\plustache_types.hpp" />
+    <ClInclude Include="external\plustache\include\template.hpp" />
+    <ClInclude Include="external\tinyjson\tinyjson.hpp" />
+    <ClInclude Include="include\Attachment.h" />
+    <ClInclude Include="include\Communication.h" />
+    <ClInclude Include="include\configure.h" />
+    <ClInclude Include="include\Connection.h" />
+    <ClInclude Include="include\CouchDB.h" />
+    <ClInclude Include="include\Database.h" />
+    <ClInclude Include="include\Document.h" />
+    <ClInclude Include="include\Exception.h" />
+    <ClInclude Include="include\Pool.h" />
+    <ClInclude Include="include\Revision.h" />
+    <ClInclude Include="include\View.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="external\plustache\src\context.cpp" />
+    <ClCompile Include="external\plustache\src\template.cpp" />
+    <ClCompile Include="src\Attachment.cpp" />
+    <ClCompile Include="src\Communication.cpp" />
+    <ClCompile Include="src\Connection.cpp" />
+    <ClCompile Include="src\CouchDB.cpp" />
+    <ClCompile Include="src\Database.cpp" />
+    <ClCompile Include="src\Document.cpp" />
+    <ClCompile Include="src\Exception.cpp" />
+    <ClCompile Include="src\Pool.cpp" />
+    <ClCompile Include="src\Revision.cpp" />
+    <ClCompile Include="src\View.cpp" />
+    <ClCompile Include="test\tester.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
