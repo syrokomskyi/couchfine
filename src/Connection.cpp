@@ -1,19 +1,18 @@
-#include "Connection.h"
-//#include "Communication.h"
+#include "../include/Connection.h"
 
 
-using namespace CouchDB;
+using namespace CouchFine;
 
 Connection::Connection(){
    getInfo();
 }
 
-Connection::Connection(const std::string &url) : comm(url){
+Connection::Connection(const std::string& url) : comm(url){
    getInfo();
 }
 
 void Connection::getInfo(){
-   Variant var = comm.getData("");
+   const Variant var = comm.getData("");
    Object  obj = boost::any_cast<Object>(*var);
 
    couchDBVersion = boost::any_cast<std::string>(*obj["version"]);
@@ -27,7 +26,7 @@ std::string Connection::getCouchDBVersion() const {
 }
 
 std::vector<std::string> Connection::listDatabases(){
-   Variant var = comm.getData("/_all_dbs");
+   const Variant var = comm.getData("/_all_dbs");
    Array   arr = boost::any_cast<Array>(*var);
 
    std::vector<std::string> dbs;
@@ -40,13 +39,13 @@ std::vector<std::string> Connection::listDatabases(){
    return dbs;
 }
 
-Database Connection::getDatabase(const std::string &db){
+Database Connection::getDatabase(const std::string& db){
    return Database(comm, db);
 }
 
 
 
-bool Connection::existsDatabase( const std::string &name ){
+bool Connection::existsDatabase( const std::string& name ){
    const Variant var = comm.getData( "/_all_dbs" );
    const Array arr = boost::any_cast< Array >( *var );
    for(auto db = arr.cbegin(); db != arr.cend(); ++db) {
@@ -60,25 +59,26 @@ bool Connection::existsDatabase( const std::string &name ){
 
 
 
-bool Connection::createDatabase(const std::string &db){
-   Variant var = comm.getData("/" + db, "PUT");
-   Object  obj = boost::any_cast<Object>(*var);
+bool Connection::createDatabase( const std::string& db ){
+   const Variant var = comm.getData( "/" + db, "PUT" );
+   Object  obj = boost::any_cast<Object>( *var );
+   if ( hasError( obj ) ) {
+      throw Exception( "Unable to create database '" + db + "': " + error( obj ) );
+   }
 
-   if(obj.find("error") != obj.end())
-      throw Exception("Unable to create database '" + db + "': " + boost::any_cast<std::string>(*obj["reason"]));
-
+   // @todo optimize fine Убрать возвращаемые значения в методах, выбрасывающих исключения.
    return boost::any_cast<bool>(*obj["ok"]);
 }
 
 
 
 
-bool Connection::deleteDatabase(const std::string &db){
-   Variant var = comm.getData("/" + db, "DELETE");
-   Object  obj = boost::any_cast<Object>(*var);
-
-   if(obj.find("error") != obj.end())
-      throw Exception("Unable to create database '" + db + "': " + boost::any_cast<std::string>(*obj["reason"]));
+bool Connection::deleteDatabase(const std::string& db){
+   const Variant var = comm.getData("/" + db, "DELETE" );
+   Object obj = boost::any_cast<Object>( *var );
+   if ( hasError( obj ) ) {
+      throw Exception( "Unable to create database '" + db + "': " + error( obj ) );
+   }
 
    return boost::any_cast<bool>(*obj["ok"]);
 }
@@ -120,12 +120,12 @@ void Connection::clearDatabase( const std::string& name, bool includeDesign ) {
         Object value = boost::any_cast<Object>( *doc["value"] );
         const std::string id = boost::any_cast< std::string> ( *doc["id"] );
         const std::string rev = boost::any_cast< std::string> ( *value["rev"] );
-	    // Удаляем документ
-	    const Variant var = comm.getData( "/" + name + "/" + id + "?rev=" + rev, "DELETE" );
-	    Object obj = boost::any_cast< Object >( *var );
-	    if (obj.find( "error" ) != obj.end()) {
-		    throw boost::any_cast< std::string >( obj["error"] );
-	    }
+        // Удаляем документ
+        const Variant var = comm.getData( "/" + name + "/" + id + "?rev=" + rev, "DELETE" );
+        Object obj = boost::any_cast< Object >( *var );
+        if (obj.find( "error" ) != obj.end()) {
+            throw boost::any_cast< std::string >( obj["error"] );
+        }
     }
     */
 
@@ -140,12 +140,12 @@ void Connection::clearDatabase( const std::string& name, bool includeDesign ) {
             Object value = boost::any_cast<Object>( *doc["value"] );
             const std::string id = boost::any_cast< std::string> ( *doc["id"] );
             const std::string rev = boost::any_cast< std::string> ( *value["rev"] );
-	        // Запоминаем документ
-	        const Variant var = comm.getData( "/" + name + "/" + id + "?rev=" + rev );
-	        Object obj = boost::any_cast< Object >( *var );
-	        if (obj.find( "error" ) != obj.end()) {
-		        throw boost::any_cast< std::string >( obj["error"] );
-	        }
+            // Запоминаем документ
+            const Variant var = comm.getData( "/" + name + "/" + id + "?rev=" + rev );
+            const Object obj = boost::any_cast< Object >( *var );
+            if ( hasError( obj ) ) {
+                throw error( obj );
+            }
             designRows.push_back( var );
         }
     }
@@ -169,8 +169,8 @@ void Connection::clearDatabase( const std::string& name, bool includeDesign ) {
 
         const Variant var = comm.getData( "/" + name, "POST",  json );
         Object obj = boost::any_cast< Object >( *var );
-        if ( obj.find( "error" ) != obj.end() ) {
-            throw Exception( "Document could not be created: " + boost::any_cast< std::string >( *obj["reason"] ) );
+        if ( hasError( obj ) ) {
+            throw Exception( "Document could not be created: " + error( obj ) );
         }
     }
 

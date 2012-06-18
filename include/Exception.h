@@ -3,7 +3,7 @@
 #include "configure.h"
 
 
-namespace CouchDB{
+namespace CouchFine {
 
 class Exception : public std::exception{
    public:

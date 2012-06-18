@@ -1,10 +1,10 @@
-#include "Exception.h"
+#include "../include/Exception.h"
 
 
-using namespace CouchDB;
+using namespace CouchFine;
 
 
-Exception::Exception(const std::string &_message){
+Exception::Exception(const std::string& _message){
    message = _message;
 }
 

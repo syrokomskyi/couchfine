@@ -6,7 +6,7 @@
 #include "Database.h"
 
 
-namespace CouchDB{
+namespace CouchFine {
 
 class Document{
    friend class Database;
@@ -39,7 +39,7 @@ class Document{
       std::vector<Attachment> getAllAttachments();
       bool removeAttachment(const std::string&);
 
-      Document copy( const std::string&, const std::string &rev = "" );
+      Document copy( const std::string&, const std::string& rev = "" );
       Document update( Database& db, const Object& jo );
       bool remove();
 
@@ -60,4 +60,4 @@ class Document{
 }
 
 
-std::ostream& operator<<(std::ostream&, const CouchDB::Document&);
+std::ostream& operator<<(std::ostream&, const CouchFine::Document&);

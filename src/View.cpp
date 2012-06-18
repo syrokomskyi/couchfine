@@ -1,9 +1,9 @@
-#include "View.h"
-#include <plustache/include/template.hpp>
-#include <plustache/include/context.hpp>
+#include "../include/View.h"
+#include "../external/plustache/include/template.hpp"
+#include "../external/plustache/include/context.hpp"
 
 
-using namespace CouchDB;
+using namespace CouchFine;
 
 
 View View::valueOf(

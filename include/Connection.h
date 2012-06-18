@@ -6,7 +6,7 @@
 #include "Communication.h"
 
 
-namespace CouchDB{
+namespace CouchFine {
 
 /**
 * (!) Внутри design-методов должны использоваться только одинарные кавычки.

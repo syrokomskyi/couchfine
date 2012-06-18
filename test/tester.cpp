@@ -1,4 +1,4 @@
-#include "CouchDB.h"
+#include "../include/CouchFine.h"
 
 
 #define TEST_DB_NAME "db_test1"
@@ -9,7 +9,7 @@ using namespace std;
 
 // TODO: debug why copy is not working correctly below
 template<typename T>
-void output(const std::vector<T> &v, std::ostream &out){
+void output(const std::vector<T> &v, std::ostream& out){
    typename std::vector<T>::const_iterator i = v.begin();
    const typename std::vector<T>::const_iterator &iEnd = v.end();
    for(; i != iEnd; ++i)
@@ -17,38 +17,38 @@ void output(const std::vector<T> &v, std::ostream &out){
 }
 
 
-static void printDatabases(CouchDB::Connection &conn){
+static void printDatabases(CouchFine::Connection &conn){
    std::vector<std::string> dbs = conn.listDatabases();
    copy(dbs.begin(), dbs.end(), ostream_iterator<std::string>(cout, " "));
    cout << endl;
 }
 
-static void printDocuments(CouchDB::Database db){
-   std::vector<CouchDB::Document> docs = db.listDocuments();
+static void printDocuments(CouchFine::Database db){
+   std::vector<CouchFine::Document> docs = db.listDocuments();
    cout << db.getName() << " has " << docs.size() << " documents: ";
-   //copy(docs.begin(), docs.end(), ostream_iterator<CouchDB::Document>(cout, " "));
+   //copy(docs.begin(), docs.end(), ostream_iterator<CouchFine::Document>(cout, " "));
    output(docs, cout);
    cout << endl;
 }
 
 
-static void printAttachments(CouchDB::Document &doc){
-   std::vector<CouchDB::Attachment> attachments = doc.getAllAttachments();
+static void printAttachments(CouchFine::Document &doc){
+   std::vector<CouchFine::Attachment> attachments = doc.getAllAttachments();
    cout << "Attachments for document " << doc << ": ";
-   //copy(attachments.begin(), attachments.end(), ostream_iterator<CouchDB::Attachment>(cout, " "));
+   //copy(attachments.begin(), attachments.end(), ostream_iterator<CouchFine::Attachment>(cout, " "));
    output(attachments, cout);
    cout << endl;
 }
 
 
-static CouchDB::Variant createRecord(int key, const std::string &value,
-                                   const std::string &value2, double dValue){
-   CouchDB::Object obj;
-   obj["key"]    = CouchDB::createVariant(key);
-   obj["value"]  = CouchDB::createVariant(value);
-   obj["value2"] = CouchDB::createVariant(value2);
-   obj["dValue"] = CouchDB::createVariant(dValue);
-   return CouchDB::createVariant(obj);
+static CouchFine::Variant createRecord(int key, const std::string& value,
+                                   const std::string& value2, double dValue){
+   CouchFine::Object obj;
+   obj["key"]    = CouchFine::createVariant(key);
+   obj["value"]  = CouchFine::createVariant(value);
+   obj["value2"] = CouchFine::createVariant(value2);
+   obj["dValue"] = CouchFine::createVariant(dValue);
+   return CouchFine::createVariant(obj);
 }
 
 
@@ -56,7 +56,7 @@ int main(){
    //setenv("http_proxy", "", 1);
 
    try{
-      CouchDB::Connection conn;
+      CouchFine::Connection conn;
       cout << "CouchDB version: " << conn.getCouchDBVersion() << endl;
 
       cout << "Initial database set: ";
@@ -69,26 +69,26 @@ int main(){
       cout << "New database set: ";
       printDatabases(conn);
 
-      CouchDB::Database db = conn.getDatabase(TEST_DB_NAME);
+      CouchFine::Database db = conn.getDatabase(TEST_DB_NAME);
 
-      CouchDB::Array records;
+      CouchFine::Array records;
       records.push_back(createRecord(12345, "T1", "DIE", 5.0));
       records.push_back(createRecord(45678, "T2", "C0" , 6.0));
       records.push_back(createRecord(89012, "T3", "C1" , 7.0));
 
-      CouchDB::Object obj;
-      obj["x1"]      = CouchDB::createVariant("A12345");
-      obj["x2"]      = CouchDB::createVariant("ABCDEF");
-      obj["records"] = CouchDB::createVariant(records);
+      CouchFine::Object obj;
+      obj["x1"]      = CouchFine::createVariant("A12345");
+      obj["x2"]      = CouchFine::createVariant("ABCDEF");
+      obj["records"] = CouchFine::createVariant(records);
 
-      CouchDB::Variant data = CouchDB::createVariant(obj);
+      CouchFine::Variant data = CouchFine::createVariant(obj);
       cout << "Creating new document" << endl;
-      CouchDB::Document doc = db.createDocument(data);
+      CouchFine::Document doc = db.createDocument(data);
       cout << "Created doc: " << doc << endl;
 
       printDocuments(db);
 
-      CouchDB::Document testDoc = db.getDocument(doc.getID());
+      CouchFine::Document testDoc = db.getDocument(doc.getID());
 
       cout << "Document in database: "
            << testDoc << ": "
@@ -104,13 +104,13 @@ int main(){
               << testDoc.getData() << endl;
 
       cout << "Creating a version of the document with id: " << TEST_ID << endl;
-      CouchDB::Document docId = db.createDocument(data, TEST_ID);
+      CouchFine::Document docId = db.createDocument(data, TEST_ID);
       cout << "Created new document: " << docId << endl;
 
       docId.addAttachment("h1", "text/plain", "hello world");
       docId.addAttachment("h2", "text/plain", "cool world");
 
-      CouchDB::Attachment a = docId.getAttachment("h1");
+      CouchFine::Attachment a = docId.getAttachment("h1");
       cout << "Got attachment: " << a << ": " << a.getData() << endl;
 
       printAttachments(docId);
@@ -126,14 +126,14 @@ int main(){
          std::string badData = a.getData();
          cerr << "ERROR: Got valid data for removed attachment: " << badData << endl;
       }
-      catch(CouchDB::Exception &e){
+      catch(CouchFine::Exception &e){
          cout << "Unable to retrieve data for removed attachment (GOOD): " << e.what() << endl;
       }
 
       docId.remove();
 
       cout << "Copying document: " << doc << endl;
-      CouchDB::Document copyDoc = doc.copy(TEST_ID);
+      CouchFine::Document copyDoc = doc.copy(TEST_ID);
       cout << "Got document copy: " << copyDoc << endl;
       copyDoc.remove();
 
@@ -149,7 +149,7 @@ int main(){
          data = testDoc.getData();
          cout << "ERROR: Got valid data for removed document: " << data << endl;
       }
-      catch(CouchDB::Exception &e){
+      catch(CouchFine::Exception &e){
          cerr << "Unable to retrieve data for removed document (GOOD): " << e.what() << endl;
       }
 

@@ -1,10 +1,10 @@
-#include "Revision.h"
+#include "../include/Revision.h"
 
 
-using namespace CouchDB;
+using namespace CouchFine;
 
 
-Revision::Revision(const std::string &_version, const std::string &_status)
+Revision::Revision(const std::string& _version, const std::string& _status)
    : version(_version)
    , status(_status)
 {
@@ -27,6 +27,6 @@ const std::string& Revision::getStatus() const{
    return status;
 }
 
-std::ostream& operator<<(std::ostream &out, const CouchDB::Revision &rev){
+std::ostream& operator<<(std::ostream& out, const CouchFine::Revision& rev){
    return out << "{rev: " << rev.getVersion() << ", status: " << rev.getStatus() << "}";
 }

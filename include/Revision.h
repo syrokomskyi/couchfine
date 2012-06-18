@@ -3,7 +3,7 @@
 #include "configure.h"
 
 
-namespace CouchDB{
+namespace CouchFine {
 
 class Revision{
    public:
@@ -21,4 +21,4 @@ class Revision{
 
 }
 
-std::ostream& operator<<(std::ostream&, const CouchDB::Revision&);
+std::ostream& operator<<(std::ostream&, const CouchFine::Revision&);

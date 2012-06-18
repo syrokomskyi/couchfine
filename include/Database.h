@@ -4,7 +4,7 @@
 #include "Document.h"
 
 
-namespace CouchDB{
+namespace CouchFine {
 
 class Database{
    friend class Connection;
@@ -72,7 +72,7 @@ class Database{
         const Variant var = comm.getData( url );
         Object obj = boost::any_cast< Object >( *var );
 
-        return (obj.find( "error" ) == obj.end());
+        return !hasError( obj );
       }
 
 
@@ -116,9 +116,8 @@ class Database{
         const Variant var = comm.getData( url );
         //const auto t = var->type().name();
         const Object obj = boost::any_cast< Object >( *var );
-        auto ftr = obj.find( "error" );
-        if (ftr != obj.end()) {
-            throw Exception( "View '" + viewName + "': " + boost::any_cast< std::string >( *ftr->second ) );
+        if ( hasError( obj ) ) {
+            throw Exception( "View '" + viewName + "': " + error( obj ) );
         }
 
         return obj;
@@ -134,7 +133,7 @@ class Database{
         const Variant var = comm.getData( url );
         Object obj = boost::any_cast< Object >( *var );
 
-        return (obj.find( "error" ) == obj.end());
+        return !hasError( obj );
       }
 
 
@@ -147,10 +146,10 @@ class Database{
       std::vector< std::string >  getUUIDs( size_t n ) const;
 
 
-      Document createDocument( const Object&, const std::string &id = "" );
-      Document createDocument( const Variant&, const std::string &id = "" );
-      Document createDocument( Variant, std::vector< Attachment >, const std::string &id = "" );
-      Document createDocument( const std::string& json, const std::string &id = "" );
+      Document createDocument( const Object&, const std::string& id = "" ) const;
+      Document createDocument( const Variant&, const std::string& id = "" ) const;
+      Document createDocument( Variant, const std::vector< Attachment >&, const std::string& id = "" ) const;
+      Document createDocument( const std::string& json, const std::string& id = "" ) const;
 
       /**
       * Записывает в хранилище набор документов. Работает значительно быстрее
@@ -159,7 +158,10 @@ class Database{
       * @return Результат выполнения. Позволяет вызвавшему методу самому решить,
       *         что делать с ошибками (чаще всего - несовпадение ревизий д.).
       */
-      CouchDB::Array createBulk( const CouchDB::Array& docs );
+      CouchFine::Array createBulk(
+          const CouchFine::Array& docs,
+          CouchFine::fnCreateJSON_t fnCreateJSON
+      );
 
 
       /**
@@ -168,25 +170,27 @@ class Database{
       *
       * @return UID документа, под которым он *будет* сохранён.
       */
-      std::string createBulk( const CouchDB::Object& doc );
+      std::string createBulk(
+          const CouchFine::Object& doc,
+          CouchFine::fnCreateJSON_t fnCreateJSON
+      );
 
 
       /**
-      * Сохраняет накопленные аккумулятором документы в хранилище. Освобождает
-      * аккумулятор.
+      * Сохраняет накопленные пулом документы в хранилище. Освобождает пул.
       *
       * @see createBulk()
       */
-      inline void flush() {
-          createBulk( acc );
+      inline void flush( CouchFine::fnCreateJSON_t fnCreateJSON ) {
+          createBulk( acc, fnCreateJSON );
           acc.clear();
       }
 
 
 
       /**
-	  * Если rev.empty(), к хранилищу делается дополнительный запрос.
-	  */
+      * Если rev.empty(), к хранилищу делается дополнительный запрос.
+      */
       void deleteDocument( const std::string& id, const std::string& rev = "" );
 
 
@@ -194,7 +198,12 @@ class Database{
       /**
       * Добавляет представление.
       */
-      void addView( const std::string& name, const std::string& design, const std::string& map, const std::string& reduce = "" );
+      void addView(
+          const std::string& design,
+          const std::string& name,
+          const std::string& map,
+          const std::string& reduce = ""
+      );
 
 
 
@@ -211,9 +220,9 @@ class Database{
 
 
       /**
-      * Аккумулятор для работы метода createBulk( const CouchDB::Object& ).
+      * Аккумулятор для работы метода createBulk( const CouchFine::Object& ).
       */
-      CouchDB::Array acc;
+      CouchFine::Array acc;
       std::vector< std::string >  accUID;
 
 };
@@ -222,6 +231,8 @@ class Database{
 
 
 
-inline std::ostream& operator<<(std::ostream& out, const CouchDB::Database& db) {
-   return out << "<Database: " << db.getName() << ">";
+
+// @todo Печатать для всех в формате JSON.
+inline std::ostream& operator<<(std::ostream& out, const CouchFine::Database& db) {
+   return out << "Database: " << db.getName() << std::endl;
 }

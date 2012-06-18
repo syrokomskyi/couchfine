@@ -4,7 +4,7 @@
 #include <map>
 
 
-namespace CouchDB{
+namespace CouchFine {
 
 /**
 * Представление CouchDB.

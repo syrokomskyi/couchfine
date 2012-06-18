@@ -4,7 +4,7 @@
 #include "Communication.h"
 
 
-namespace CouchDB{
+namespace CouchFine {
 
 class Attachment{
    friend class Document;
@@ -23,7 +23,7 @@ class Attachment{
       const std::string& getRevision() const;
       const std::string& getContentType() const;
 
-      std::string getData();
+      std::string getData() const;
 
    private:
       Communication &comm;
@@ -37,4 +37,4 @@ class Attachment{
 
 }
 
-std::ostream& operator<<(std::ostream&, const CouchDB::Attachment&);
+std::ostream& operator<<(std::ostream&, const CouchFine::Attachment&);

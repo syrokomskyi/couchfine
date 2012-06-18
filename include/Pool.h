@@ -1,10 +1,9 @@
 #pragma once
 
-#include "configure.h"
-#include "Communication.h"
+#include "type.h"
 
 
-namespace CouchDB {
+namespace CouchFine {
 
 /**
 * Пул объектов. Динамический.
@@ -12,15 +11,16 @@ namespace CouchDB {
 * их одним махом.
 *
 * @info Из-за тяжёлого преобразования русских букв (от которого надо
-*       избавиться), лучше не смешивать д. с русск. символами и без
-*       в одном пуле, сохраняя эти пулы по отдельности.
+*       избавиться @todo Свежая версия CouchDB?), лучше не смешивать
+*       д. с русск. символами и без в одном пуле, сохраняя эти пулы
+*       по отдельности.
 */
 class Pool :
-    public CouchDB::Array
+    public CouchFine::Array
 {
 public:
     inline Pool() :
-        CouchDB::Array()
+        CouchFine::Array()
     {
     }
 
@@ -28,18 +28,49 @@ public:
     virtual inline ~Pool() {
     }
 
+
 };
 
 
-} // namespace CouchDB
+} // CouchFine
 
 
 
 
-inline CouchDB::Pool& operator<<(
-    CouchDB::Pool& pool,
-    const CouchDB::Object& doc
+
+// (!) Меняет Object.
+inline CouchFine::Pool& operator<<(
+    CouchFine::Pool& pool,
+    // Передаётся ссылка, т.к. методы могут добавить к объекту свои данные.
+    // Например, _id и _rev.
+    CouchFine::Variant* var
 ) {
-    pool.push_back( CouchDB::cjv( doc ) );
+    pool.push_back( *var );
     return pool;
 }
+
+
+
+// (!) Меняет Object.
+inline CouchFine::Pool& operator<<(
+    CouchFine::Pool& pool,
+    // Передаётся ссылка, т.к. методы могут добавить к объекту свои данные.
+    // Например, _id и _rev.
+    CouchFine::Object* doc
+) {
+    pool << &CouchFine::cjv( doc );
+    return pool;
+}
+
+
+
+/* - Не усложняем. Чревато утечкой памяти.
+// (!) Object не меняет.
+inline CouchFine::Pool& operator<<(
+    CouchFine::Pool& pool,
+    const CouchFine::Object& doc
+) {
+    pool.push_back( CouchFine::cjv( doc ) );
+    return pool;
+}
+*/

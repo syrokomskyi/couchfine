@@ -1,12 +1,25 @@
 #pragma once
 
+
+/**
+* Принятые соглашения для проекта:
+*
+*   # Клиент для работы с CouchDB использует методы operator<<() и operator>>,
+*     представляющие собой запросы для изменения и чтения в / из хранилища.
+*   # Методы, печатающие в поток - вида operator<<( std::ostream, * ) - делают
+*     это в формате JSON.
+*/
+
+
+
+
 // Without warning: "Name truncated"
 #pragma warning( disable : 4503 )
 
 
 /**
-* How max elements prepare to bulkSave defore save.
-* @see createBulk( CouchDB::Object )
+* How max elements prepare to bulkSave before save.
+* @see createBulk( CouchFine::Object )
 */
 #define ACC_SIZE 1000
 
@@ -28,7 +41,7 @@
 /**
 * Print debug information.
 */
-//#define COUCH_DB_DEBUG
+#define COUCH_DB_DEBUG
 
 
 #include <assert.h>
@@ -41,12 +54,6 @@
 #include <streambuf>
 #include <utility>
 #include <vector>
-
-#ifdef SAVE_ORDER_FIELDS
-#include <map>
-#else
-#include <unordered_map>
-#endif
 
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/any.hpp>

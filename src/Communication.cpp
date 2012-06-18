@@ -1,8 +1,8 @@
-#include "Communication.h"
-#include "tinyjson/tinyjson.hpp"
+#include "../include/Communication.h"
+#include "../external/tinyjson/tinyjson.hpp"
 #include <boost/assign.hpp>
 
-using namespace CouchDB;
+using namespace CouchFine;
 
 const std::string DEFAULT_COUCHDB_URL = "http://localhost:5984";
 
@@ -80,6 +80,7 @@ static Variant parseData( const std::string& buffer ) {
 
 
 
+
 static int writer( char *data, size_t size, size_t nmemb, std::string* dest ) {
     int written = 0;
     if ( dest ){
@@ -89,6 +90,7 @@ static int writer( char *data, size_t size, size_t nmemb, std::string* dest ) {
 
     return written;
 }
+
 
 
 
@@ -104,77 +106,124 @@ static size_t reader( void* ptr, size_t size, size_t nmemb, std::string* stream 
 
 
 
-Communication::Communication(){
-   init(DEFAULT_COUCHDB_URL);
+
+Communication::Communication() {
+   init( DEFAULT_COUCHDB_URL );
 }
 
 
 
-Communication::Communication(const std::string &url){
-   init(url);
+
+Communication::Communication( const std::string& url ) {
+   init( url );
 }
 
 
 
-void Communication::init(const std::string &url){
-   curl_global_init(CURL_GLOBAL_DEFAULT);
+
+void Communication::init( const std::string& url ) {
+   curl_global_init( CURL_GLOBAL_DEFAULT );
 
    curl = curl_easy_init();
-   if(!curl)
-      throw Exception("Unable to create CURL object");
+   if ( !curl )
+      throw Exception( "Unable to create CURL object" );
 
-   curl_easy_setopt( curl, CURLOPT_NOPROGRESS, 1L );
+   if (curl_easy_setopt( curl, CURLOPT_NOPROGRESS, 1L ) != CURLE_OK)
+      throw Exception( "Unable to set NOPROGRESS option." );
 
+#ifdef _DEBUG
    // @test
-   //curl_easy_setopt( curl, CURLOPT_VERBOSE, 1L );
+   curl_easy_setopt( curl, CURLOPT_VERBOSE, 1L );
    //curl_easy_setopt( curl, CURLOPT_HEADER, 1L );
+#endif
 
-   if(curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writer) != CURLE_OK)
-      throw Exception("Unable to set writer function");
+   if (curl_easy_setopt( curl, CURLOPT_WRITEFUNCTION, writer ) != CURLE_OK)
+      throw Exception( "Unable to set writer function" );
 
-   if(curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer) != CURLE_OK)
-      throw Exception("Unable to set write buffer");
+   if (curl_easy_setopt( curl, CURLOPT_WRITEDATA, &buffer ) != CURLE_OK)
+      throw Exception( "Unable to set write buffer" );
 
-   if(curl_easy_setopt(curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1) != CURLE_OK)
-      throw Exception("Unable to set http-version");
+   if (curl_easy_setopt( curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1 ) != CURLE_OK)
+      throw Exception( "Unable to set http-version" );
+
+   if (curl_easy_setopt( curl, CURLOPT_NOSIGNAL, 1 ) != CURLE_OK)
+      throw Exception( "Unable to set NOSIGNAL option." );
+
+   if (curl_easy_setopt( curl, CURLOPT_FAILONERROR, 0 ) != CURLE_OK)
+      throw Exception( "Unable to set FAILONERROR option." );
+
+   // (!) Первое подключение к CouchDB после включения компьютера требует
+   // неск. секунд. Источник: мой компьютер :)
+   if (curl_easy_setopt( curl, CURLOPT_TIMEOUT, 5 ) != CURLE_OK)
+      throw Exception( "Unable to set TIMEOUT option." );
 
    baseURL = url;
 }
 
-Communication::~Communication(){
-   if(curl)
-      curl_easy_cleanup(curl);
-   curl_global_cleanup();
+
+
+
+Communication::~Communication() {
+    if ( curl ) {
+        curl_easy_cleanup( curl );
+    }
+    curl_global_cleanup();
 }
 
-Variant Communication::getData(const std::string &url, const std::string &method,
-                               const std::string &data){
+
+
+
+Variant Communication::getData(
+    const std::string& url,
+    const std::string& method,
+    const std::string& data
+) {
    HeaderMap headers;
    return getData(url, method, data, headers);
 }
 
-Variant Communication::getData(const std::string &url, const HeaderMap &headers,
-                               const std::string &method, const std::string &data){
-   return getData(url, method, data, headers);
+
+
+
+Variant Communication::getData(
+    const std::string& url,
+    const HeaderMap &headers,
+    const std::string& method,
+    const std::string& data
+) {
+   return getData( url, method, data, headers );
 }
 
-std::string Communication::getRawData(const std::string &url){
+
+
+
+std::string Communication::getRawData( const std::string& url ) {
    HeaderMap headers;
-   getRawData(url, "GET", "", headers);
+   getRawData( url, "GET", "", headers );
    return buffer;
 }
 
-Variant Communication::getData(const std::string &url, const std::string &method,
-                               std::string data, const HeaderMap &headers){
-   getRawData(url, method, data, headers);
-   return parseData(buffer);
+
+
+
+Variant Communication::getData(
+    const std::string& url,
+    const std::string& method,
+    std::string data,
+    const HeaderMap &headers
+) {
+   getRawData( url, method, data, headers );
+   return parseData( buffer );
 }
 
 
 
 
-void Communication::getRawData(const std::string& _url, const std::string& method,
-                               const std::string& data, const HeaderMap& headers
+void Communication::getRawData(
+    const std::string& _url,
+    const std::string& method,
+    const std::string& data,
+    const HeaderMap& headers
 ) {
    /* - Лишнее. Передаём уже подготовленный ключ.
    std::string preparedURL = curl_easy_escape( curl, _url.c_str(), _url.length() );
@@ -199,6 +248,7 @@ void Communication::getRawData(const std::string& _url, const std::string& metho
        }
        return false;
    };
+
 
    std::string preparedData;
    if ( needSafe( data ) ) {
@@ -233,6 +283,7 @@ void Communication::getRawData(const std::string& _url, const std::string& metho
        curl_free( preparedDataPtr );
        const long sizePreparedData = (long)preparedData.size();
        */
+       /* - Заменено. См. ниже.
        preparedData = curl_easy_escape( curl, data.c_str(), data.length() );
        char* preparedDataPtr = curl_easy_escape( curl, data.c_str(), data.length() );
        preparedData = (std::string)preparedDataPtr;
@@ -242,12 +293,23 @@ void Communication::getRawData(const std::string& _url, const std::string& metho
                boost::replace_all( preparedData, code.first, code.second );
        } );
        curl_free( preparedDataPtr );
+       */
+       preparedData = curl_easy_escape( curl, data.c_str(), data.length() );
+       std::for_each( FROM_RFC1738.cbegin(), FROM_RFC1738.cend(),
+           [ &preparedData ] ( const std::map< std::string, std::string >::value_type&  code ) {
+               boost::replace_all( preparedData, code.first, code.second );
+       } );
 
    } else {
        preparedData = data;
    }
 
-   const long sizePreparedData = (long)preparedData.size();
+   // Всегда экранируем символы перевода строки, иначе - ошибка при передаче
+   /* - Не работает: ошибка при передаче.
+   boost::replace_all( preparedData, "\n", "\\n" );
+   */
+
+   const long sizePreparedData = static_cast< long >( preparedData.size() );
 
 
 #ifdef COUCH_DB_DEBUG
@@ -274,32 +336,31 @@ void Communication::getRawData(const std::string& _url, const std::string& metho
       }
 
       if (curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk) != CURLE_OK)
-          throw Exception("Unable to set custom header");
+          throw Exception( "Unable to set custom header" );
    }
 
-   if(curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method.c_str()) != CURLE_OK)
-      throw Exception("Unable to set HTTP method: " + method);
+   if (curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method.c_str()) != CURLE_OK)
+      throw Exception( "Unable to set HTTP method: " + method );
 
-   if(curl_easy_setopt(curl, CURLOPT_URL, url.c_str()) != CURLE_OK)
-      throw Exception("Unable to set URL: " + url);
+   if (curl_easy_setopt(curl, CURLOPT_URL, url.c_str()) != CURLE_OK)
+      throw Exception( "Unable to set URL: " + url );
 
-   if( presentData ){
+   if( presentData ) {
 #ifdef COUCH_DB_DEBUG
-      std::cout << "Sending data: " << data << std::endl;
+      std::cout << "Sending data: " << preparedData << std::endl;
 #endif
 
-      if(curl_easy_setopt(curl, CURLOPT_READFUNCTION, reader) != CURLE_OK)
-         throw Exception("Unable to set read function");
+      if (curl_easy_setopt(curl, CURLOPT_READFUNCTION, reader) != CURLE_OK)
+         throw Exception( "Unable to set read function" );
 
-      if(curl_easy_setopt(curl, CURLOPT_READDATA, &preparedData) != CURLE_OK)
-         throw Exception("Unable to set data: " + preparedData);
+      if (curl_easy_setopt(curl, CURLOPT_READDATA, &preparedData) != CURLE_OK)
+         throw Exception( "Unable to set data: " + preparedData);
 
-      if(curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L) != CURLE_OK)
-         throw Exception("Unable to set upload request");
+      if (curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L) != CURLE_OK)
+         throw Exception( "Unable to set upload request" );
 
-      if(curl_easy_setopt(curl, CURLOPT_INFILESIZE, sizePreparedData) != CURLE_OK)
-         //throw Exception("Unable to set content size: " + data.size());
-         throw Exception("Unable to set content size");
+      if (curl_easy_setopt(curl, CURLOPT_INFILESIZE, sizePreparedData) != CURLE_OK)
+         throw Exception( "Unable to set content size" );
    }
 
    /* - Заменено. См. ниже.
@@ -312,22 +373,22 @@ void Communication::getRawData(const std::string& _url, const std::string& metho
        const CURLcode codeError = curl_easy_getinfo( curl, info );
        const auto strError = curl_easy_strerror( codeError );
        std::cerr << strError << std::endl;
-       throw Exception("Unable to load URL: " + url);
+       throw Exception( "Unable to load URL: " + url );
    }
 
 
-   if( presentData || headers.size() > 0){
-      if(curl_easy_setopt(curl, CURLOPT_UPLOAD, 0L) != CURLE_OK)
-         throw Exception("Unable to reset upload request");
+   if ( presentData || (headers.size() > 0) ) {
+      if (curl_easy_setopt( curl, CURLOPT_UPLOAD, 0L ) != CURLE_OK)
+         throw Exception( "Unable to reset upload request" );
 
-      if(curl_easy_setopt(curl, CURLOPT_HTTPHEADER, NULL) != CURLE_OK)
-         throw Exception("Unable to reset custom headers");
+      if (curl_easy_setopt( curl, CURLOPT_HTTPHEADER, NULL ) != CURLE_OK)
+         throw Exception( "Unable to reset custom headers" );
    }
 
 #ifdef COUCH_DB_DEBUG
    long responseCode;
-   if(curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode) != CURLE_OK)
-      throw Exception("Unable to get response code");
+   if (curl_easy_getinfo( curl, CURLINFO_RESPONSE_CODE, &responseCode ) != CURLE_OK)
+      throw Exception( "Unable to get response code" );
 
    std::cout << "Response code: " << responseCode << std::endl;
    std::cout << "Raw buffer: " << buffer;

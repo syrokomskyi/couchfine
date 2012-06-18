@@ -1,8 +1,9 @@
-#include "Database.h"
-#include "Exception.h"
+#include "../include/Mode.h"
+#include "../include/Database.h"
+#include "../include/Exception.h"
 
 
-using namespace CouchDB;
+using namespace CouchFine;
 
 
 /**
@@ -17,7 +18,7 @@ static std::string createJSON( const Variant &data ) {
 
 
 
-Database::Database(Communication &_comm, const std::string &_name)
+Database::Database(Communication &_comm, const std::string& _name)
    : comm(_comm)
    , name(_name)
 {
@@ -101,86 +102,25 @@ std::vector<Document> Database::listDocuments(){
 
 
 
-Document Database::getDocument( const std::string &id, const std::string &rev ) {
+Document Database::getDocument( const std::string& id, const std::string& rev ) {
 
     std::string url = "/" + name + "/" + id + ( rev.empty() ? "" : ("?rev=" + rev) );
 
     // (!) Целые числа хранятся как знаковый тип, при превышении лимита - исключение
     const Variant var = comm.getData( url );
     Object obj = boost::any_cast< Object >( *var );
-    if (obj.find( "error" ) != obj.end()) {
+    if ( hasError( obj ) ) {
         throw Exception("Document " + id + " (v" + rev + ") not found: " + error( obj ) );
     }
 
     return Document(
         comm,
         name,
-        //boost::any_cast< std::string >( *obj["_id"] ),
-        CouchDB::uid( obj ),
+        CouchFine::uid( obj ),
         "", // no key returned here
-        //boost::any_cast< std::string >( *obj["_rev"] )
-        CouchDB::rev( obj )
+        CouchFine::revision( obj )
     );
 }
-
-
-
-/* - inline
-bool Database::hasDocument( const std::string &id ) {
-    // @todo optimize?
-    const std::string url = "/" + name + "/" + id;
-    const Variant var = comm.getData( url );
-    Object obj = boost::any_cast< Object >( *var );
-
-    return (obj.find( "error" ) == obj.end());
-}
-*/
-
-
-
-
-/* - inline
-Object Database::getView(
-    const std::string& viewName,
-    const std::string& designName,
-    const std::string& key
-) {
-    // Для корректного запроса ключ требует преобразования
-    //std::string preparedKey = Communication::escapeKey( key );
-    std::string preparedKey = key;
-
-    const bool a = !preparedKey.empty() && (preparedKey[0] == '[');
-    const std::string k = a ? preparedKey : ("\"" + preparedKey + "\"");
-    const std::string designUID = getDesignUID( designName );
-    const std::string url = "/" + name + "/" + designUID + "/_view/" + viewName +
-        ( preparedKey.empty() ? "" : ("?key=" + k) );
-
-    const Variant var = comm.getData( url );
-    //const auto t = var->type().name();
-    const Object obj = boost::any_cast< Object >( *var );
-    auto ftr = obj.find( "error" );
-    if (ftr != obj.end()) {
-        throw Exception( "View '" + viewName + "': " + boost::any_cast< std::string >( *ftr->second ) );
-    }
-
-    return obj;
-}
-*/
-
-
-
-
-/* - inline
-bool Database::hasView( const std::string& viewName, const std::string& designName ) {
-    // @todo optimize?
-    const std::string designUID = getDesignUID( designName );
-    const std::string url = "/" + name + "/" + designUID + "/_view/" + viewName + "?limit=1";
-    const Variant var = comm.getData( url );
-    Object obj = boost::any_cast< Object >( *var );
-
-    return (obj.find( "error" ) == obj.end());
-}
-*/
 
 
 
@@ -189,7 +129,7 @@ std::vector< std::string >  Database::getUUIDs( size_t n ) const {
 
     const Variant var = comm.getData( "/_uuids?count=100" );
     Object obj = boost::any_cast< Object >( *var );
-    if (obj.find( "error" ) != obj.end()) {
+    if ( hasError( obj ) ) {
         throw Exception( "Set of ID's is not created: " + error( obj ) );
     }
 
@@ -209,14 +149,14 @@ std::vector< std::string >  Database::getUUIDs( size_t n ) const {
 
 
 
-Document Database::createDocument( const Object& obj, const std::string& id ) {
-   return createDocument( cjv( obj ) );
+Document Database::createDocument( const Object& obj, const std::string& id ) const {
+   return createDocument( cjv( obj ),  std::vector< Attachment >(),  id );
 }
 
 
 
 
-Document Database::createDocument( const Variant& data, const std::string& id ) {
+Document Database::createDocument( const Variant& data, const std::string& id ) const {
    return createDocument( data,  std::vector< Attachment >(),  id );
 }
 
@@ -225,14 +165,12 @@ Document Database::createDocument( const Variant& data, const std::string& id ) 
 
 Document Database::createDocument(
     Variant data,
-    std::vector< Attachment > attachments,
-    const std::string &id
-) {
-    if (attachments.size() > 0) {
+    const std::vector< Attachment >& attachments,
+    const std::string& id
+) const {
+    if ( !attachments.empty() ) {
         Object attachmentObj;
-        std::vector< Attachment >::iterator attachment = attachments.begin();
-        const std::vector< Attachment >::iterator &attachmentEnd = attachments.end();
-        for ( ; attachment != attachmentEnd; ++attachment) {
+        for (auto attachment = attachments.cbegin(); attachment != attachments.cend(); ++attachment) {
            Object attachmentData;
            attachmentData["content_type"] = createVariant( attachment->getContentType() );
            attachmentData["data"        ] = createVariant( attachment->getData() );
@@ -254,24 +192,22 @@ Document Database::createDocument(
 
 
 
-Document Database::createDocument( const std::string& json, const std::string &id ) {
+Document Database::createDocument( const std::string& json, const std::string& id ) const {
 
     const Variant var = (id.size() > 0) ?
         comm.getData( "/" + name + "/" + id, "PUT",  json ) :
         comm.getData( "/" + name + "/",      "POST", json );
 
     const Object obj = boost::any_cast< Object >( *var );
-    if (obj.find( "error" ) != obj.cend()) {
+    if ( hasError( obj ) ) {
        throw Exception( "Document could not be created: " + error( obj ) );
     }
 
     return Document(
         comm, name,
-        //boost::any_cast< std::string >( *obj["id"] ),
-        CouchDB::uid( obj ),
+        CouchFine::uid( obj ),
         "", // no key returned here
-        //boost::any_cast< std::string >( *obj["rev"] )
-        CouchDB::rev( obj )
+        CouchFine::revision( obj )
     );
 }
 
@@ -279,15 +215,51 @@ Document Database::createDocument( const std::string& json, const std::string &i
 
 
 
-CouchDB::Array Database::createBulk( const CouchDB::Array&  docs ) {
+CouchFine::Array Database::createBulk(
+    const CouchFine::Array& docs,
+    CouchFine::fnCreateJSON_t fnCreateJSON
+) {
+    // I. Сохраним документы.
+
+    // Исключим из списка документов поля, начинающиеся с Mode::File::PREFIX
+    // @todo optimize Делается копия 'docs'. Просадка производительности.
+    Array preparedDocs;
+    for (auto itr = docs.cbegin(); itr != docs.cend(); ++itr) {
+#ifdef _DEBUG
+        const std::string& typeName = (*itr)->type().name();
+#endif
+        const Object* d = boost::any_cast< Object* >( **itr );
+        // просматриваем поля, ставляем те, что без Mode::File::PREFIX
+        Object obj;
+        for (auto dtr = d->cbegin(); dtr != d->cend(); ++dtr) {
+            const std::string& field = dtr->first;
+            if ( !boost::starts_with( field, Mode::File::PREFIX() ) ) {
+                // @todo optimize Собирать только ссылки?
+                obj[ field ] = dtr->second;
+            }
+        }
+
+        preparedDocs.push_back( cjv( obj ) );
+
+    } // for (auto itr = docs.cbegin(); itr != docs.cend(); ++itr)
+
 
     // @see http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API#Modify_Multiple_Documents_With_a_Single_Request
-    CouchDB::Object o;
-    o["docs"] = createVariant( docs );
-    const std::string json = createJSON( createVariant( o ) );
+    Object o;
+    //o["docs"] = createVariant( docs );
+    o["docs"] = createVariant( preparedDocs );
+    const std::string json = fnCreateJSON
+        ? ( fnCreateJSON )( createVariant( o ) )
+        : createJSON( createVariant( o ) );
     //std::cout << std::endl << createVariant( o ) << std::endl << std::endl;
 
-    Variant var = comm.getData( "/" + name + "/_bulk_docs",  "POST",  json );
+    const Variant var = comm.getData( "/" + name + "/_bulk_docs",  "POST",  json );
+    if ( hasError( var ) ) {
+        std::cerr << "JSON: " << json << std::endl;
+        std::cerr << "CouchFine::operator<<( Database, NewUpdate ) " << error( var ) << std::endl;
+        throw CouchFine::Exception( "Unrecognized exception: " + error( var ) );
+    }
+
     //std::cout << std::endl << var << std::endl << std::endl;
     /* - Быстрее. Проще. Обходимся.
     transformObject( &var );
@@ -297,30 +269,76 @@ CouchDB::Array Database::createBulk( const CouchDB::Array&  docs ) {
     //       быть возвращён Object?
     /* - Лучше вернём результат для анализа: позволит вызвавшему методу
          самому решить, что делать с ошибками (часто - несовпадение ревизий).
-    // При удачном завершении (см. catch ниже) получим список ключей CouchDB::Array
-    const CouchDB::Array a = boost::any_cast< CouchDB::Array >( *var );
+    // При удачном завершении (см. catch ниже) получим список ключей CouchFine::Array
+    const CouchFine::Array a = boost::any_cast< CouchFine::Array >( *var );
     // При неудачном - вместо ключей получим объекты с информ. об ошибках
     for (auto itr = a.cbegin(); itr != a.cend(); ++itr) {
         const auto& type = itr->get()->type();
         if (type == typeid( Object )) {
             // ошибка, однозначно
             std::cerr << cjv( a );
-            const CouchDB::Object obj = boost::any_cast< CouchDB::Object >( *itr );
+            const CouchFine::Object obj = boost::any_cast< CouchFine::Object >( *itr );
             throw Exception( "Part of set of documents could not be created. First error: " + obj.error() );
         }
     }
     */
 
-    const CouchDB::Array a = boost::any_cast< CouchDB::Array >( *var );
+    const Array ra = boost::any_cast< Array >( *var );
 
-    return a;
+
+    // II. Сохраняем файлы-вложения.
+    // @todo Позволить сохранять разные типы данных, не только plain/text.
+    // @todo optimize Сохранять поля документов и файлы в один запрос.
+    for (auto itr = docs.cbegin(); itr != docs.cend(); ++itr) {
+        const Object* d = boost::any_cast< Object* >( **itr );
+        for (auto dtr = d->cbegin(); dtr != d->cend(); ++dtr) {
+            const std::string& field = dtr->first;
+            if ( boost::starts_with( field, Mode::File::PREFIX() ) ) {
+                // порядок следования - совпадает
+                // инициируем здесь в расчёте на то, что кол-во документов с
+                // файлами-вложения много меньше общего кол-ва в 'docs'
+                const std::size_t i = std::distance( docs.cbegin(), itr );
+                const Object& ora = boost::any_cast< Object& >( *ra.at( i ) );
+                const std::string nameFile =
+                    boost::erase_first_copy( field, Mode::File::PREFIX() );
+                const std::string& dataFile = boost::any_cast< std::string& >( *dtr->second );
+                const uid_t& uidDoc = uid( ora );
+                assert( !uidDoc.empty() && "Обнаружен пустой UID. Неожиданно..." );
+                const rev_t& revisionDoc = revision( ora );
+                assert( !revisionDoc.empty() && "Обнаружена пустая ревизия. Неожиданно..." );
+                /* - Заменено. См. ниже.
+                *this << Mode::File( name, data, uidDoc, revisionDoc );
+                */
+                /* - Создать документ дешевле, чем тащить его из хранилища. См. ниже.
+                Document doc = getDocument( uidDoc );
+                */
+                Document doc(
+                    Database::comm, Database::name,
+                    uidDoc, "", revisionDoc
+                );
+                const bool result = doc.addAttachment( nameFile, "text/plain", dataFile );
+                if ( !result ) {
+                    throw CouchFine::Exception( "Could not create attachment '" + nameFile + "' with data '" + dataFile + "'." );
+                }
+
+            } // if ( boost::starts_with( field, Mode::File::PREFIX() ) )
+
+        } // for (auto dtr = d.cbegin(); dtr != d.cend(); ++dtr)
+
+    } // for (auto itr = docs.cbegin(); itr != docs.cend(); ++itr)
+
+
+    return ra;
 }
 
 
 
 
 
-std::string Database::createBulk( const CouchDB::Object& doc ) {
+std::string Database::createBulk(
+    const CouchFine::Object& doc,
+    CouchFine::fnCreateJSON_t fnCreateJSON
+) {
 
     // Проверяем, что в запасе ещё есть UID для докментов
     if (accUID.size() == 0) {
@@ -328,7 +346,7 @@ std::string Database::createBulk( const CouchDB::Object& doc ) {
     }
 
     // Назначаем документу ID в хранилище
-    CouchDB::Object o = doc;
+    CouchFine::Object o = doc;
     const std::string id = accUID.back();
     accUID.pop_back();
     o["_id"] = cjv( id );
@@ -337,7 +355,7 @@ std::string Database::createBulk( const CouchDB::Object& doc ) {
     // накопленные документы
     acc.push_back( cjv( doc ) );
     if (acc.size() >= ACC_SIZE) {
-        createBulk( acc );
+        createBulk( acc, fnCreateJSON );
         acc.clear();
     }
 
@@ -352,22 +370,22 @@ void Database::deleteDocument( const std::string& id, const std::string& rev ) {
 
     const std::string url = "/" + name + "/" + id;
 
-	if ( rev.empty() ) {
-		// Получаем значение ревизии
-		// @todo optimize?
-		const Variant var = comm.getData( url );
-		Object obj = boost::any_cast< Object >( *var );
-        if (obj.find( "error" ) != obj.cend()) {
-			throw error( obj );
-		}
-	}
+    if ( rev.empty() ) {
+        // Получаем значение ревизии
+        // @todo optimize?
+        const Variant var = comm.getData( url );
+        const Object obj = boost::any_cast< Object >( *var );
+        if ( hasError( obj ) ) {
+            throw error( obj );
+        }
+    }
 
-	// Удаляем документ
-	const Variant var = comm.getData( url + "?rev=" + rev, "DELETE" );
-	Object obj = boost::any_cast< Object >( *var );
-	if (obj.find( "error" ) != obj.cend()) {
-		throw error( obj );
-	}
+    // Удаляем документ
+    const Variant var = comm.getData( url + "?rev=" + rev, "DELETE" );
+    Object obj = boost::any_cast< Object >( *var );
+    if ( hasError( obj ) ) {
+        throw error( obj );
+    }
 }
 
 
@@ -377,8 +395,8 @@ void Database::deleteDocument( const std::string& id, const std::string& rev ) {
 
 
 void Database::addView(
-    const std::string& name,
     const std::string& design,
+    const std::string& name,
     const std::string& map,
     const std::string& reduce
 ) {
@@ -397,17 +415,17 @@ void Database::addView(
 
     // Добавляем представление
     const auto doc = getDocument( designUID );
-    const CouchDB::Variant jv = doc.getData();
-    CouchDB::Object jo = boost::any_cast< CouchDB::Object >( *jv );
-    auto ds = boost::any_cast< CouchDB::Object >( *jo["views"] );
+    const CouchFine::Variant jv = doc.getData();
+    CouchFine::Object jo = boost::any_cast< CouchFine::Object >( *jv );
+    auto ds = boost::any_cast< CouchFine::Object >( *jo["views"] );
 
-    CouchDB::Object content;
-    content["map"] = createVariant( map );
-	if ( !reduce.empty() ) {
-        content["reduce"] = createVariant( reduce );
-	}
-    ds[name] = createVariant( content );
+    CouchFine::Object content;
+    content["map"] = cjv( map );
+    if ( !reduce.empty() ) {
+        content["reduce"] = cjv( reduce );
+    }
+    ds[name] = cjv( content );
 
-	jo["views"] = createVariant( ds );
-    createDocument( createVariant( jo ), designUID );
+    jo["views"] = cjv( ds );
+    createDocument( cjv( jo ), designUID );
 }
