@@ -4,13 +4,13 @@
 using namespace CouchFine;
 
 
-Exception::Exception(const std::string& _message){
+Exception::Exception(const std::string& _message) {
    message = _message;
 }
 
-Exception::~Exception() throw(){
+Exception::~Exception() throw() {
 }
 
-const char* Exception::what() const throw(){
+const char* Exception::what() const throw() {
    return message.c_str();
 }

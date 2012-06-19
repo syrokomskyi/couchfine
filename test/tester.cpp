@@ -9,7 +9,7 @@ using namespace std;
 
 // TODO: debug why copy is not working correctly below
 template<typename T>
-void output(const std::vector<T> &v, std::ostream& out){
+void output(const std::vector<T> &v, std::ostream& out) {
    typename std::vector<T>::const_iterator i = v.begin();
    const typename std::vector<T>::const_iterator &iEnd = v.end();
    for(; i != iEnd; ++i)
@@ -17,13 +17,13 @@ void output(const std::vector<T> &v, std::ostream& out){
 }
 
 
-static void printDatabases(CouchFine::Connection &conn){
+static void printDatabases(CouchFine::Connection &conn) {
    std::vector<std::string> dbs = conn.listDatabases();
    copy(dbs.begin(), dbs.end(), ostream_iterator<std::string>(cout, " "));
    cout << endl;
 }
 
-static void printDocuments(CouchFine::Database db){
+static void printDocuments(CouchFine::Database db) {
    std::vector<CouchFine::Document> docs = db.listDocuments();
    cout << db.getName() << " has " << docs.size() << " documents: ";
    //copy(docs.begin(), docs.end(), ostream_iterator<CouchFine::Document>(cout, " "));
@@ -32,7 +32,7 @@ static void printDocuments(CouchFine::Database db){
 }
 
 
-static void printAttachments(CouchFine::Document &doc){
+static void printAttachments(CouchFine::Document &doc) {
    std::vector<CouchFine::Attachment> attachments = doc.getAllAttachments();
    cout << "Attachments for document " << doc << ": ";
    //copy(attachments.begin(), attachments.end(), ostream_iterator<CouchFine::Attachment>(cout, " "));
@@ -42,17 +42,17 @@ static void printAttachments(CouchFine::Document &doc){
 
 
 static CouchFine::Variant createRecord(int key, const std::string& value,
-                                   const std::string& value2, double dValue){
+                                   const std::string& value2, double dValue) {
    CouchFine::Object obj;
-   obj["key"]    = CouchFine::createVariant(key);
-   obj["value"]  = CouchFine::createVariant(value);
-   obj["value2"] = CouchFine::createVariant(value2);
-   obj["dValue"] = CouchFine::createVariant(dValue);
-   return CouchFine::createVariant(obj);
+   obj["key"]    = CouchFine::cjv( key );
+   obj["value"]  = CouchFine::cjv( value );
+   obj["value2"] = CouchFine::cjv( value2 );
+   obj["dValue"] = CouchFine::cjv( dValue );
+   return CouchFine::cjv( obj );
 }
 
 
-int main(){
+int main() {
    //setenv("http_proxy", "", 1);
 
    try{
@@ -77,11 +77,11 @@ int main(){
       records.push_back(createRecord(89012, "T3", "C1" , 7.0));
 
       CouchFine::Object obj;
-      obj["x1"]      = CouchFine::createVariant("A12345");
-      obj["x2"]      = CouchFine::createVariant("ABCDEF");
-      obj["records"] = CouchFine::createVariant(records);
+      obj["x1"]      = CouchFine::cjv("A12345");
+      obj["x2"]      = CouchFine::cjv("ABCDEF");
+      obj["records"] = CouchFine::cjv(records);
 
-      CouchFine::Variant data = CouchFine::createVariant(obj);
+      CouchFine::Variant data = CouchFine::cjv(obj);
       cout << "Creating new document" << endl;
       CouchFine::Document doc = db.createDocument(data);
       cout << "Created doc: " << doc << endl;
@@ -126,7 +126,7 @@ int main(){
          std::string badData = a.getData();
          cerr << "ERROR: Got valid data for removed attachment: " << badData << endl;
       }
-      catch(CouchFine::Exception &e){
+      catch(CouchFine::Exception &e) {
          cout << "Unable to retrieve data for removed attachment (GOOD): " << e.what() << endl;
       }
 
@@ -149,7 +149,7 @@ int main(){
          data = testDoc.getData();
          cout << "ERROR: Got valid data for removed document: " << data << endl;
       }
-      catch(CouchFine::Exception &e){
+      catch(CouchFine::Exception &e) {
          cerr << "Unable to retrieve data for removed document (GOOD): " << e.what() << endl;
       }
 
@@ -162,10 +162,10 @@ int main(){
 
       cout << "All tests passed" << endl;
    }
-   catch(exception &e){
+   catch(exception &e) {
       cerr << "Exception: " << e.what() << endl;
    }
-   catch(...){
+   catch(...) {
       cerr << "Caught unknown exception in main..." << endl;
    }
 }

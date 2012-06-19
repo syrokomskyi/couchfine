@@ -57,15 +57,16 @@ typedef boost::unordered_map< std::string, Variant >  Object;
 * @alias createVariant()
 */
 template< typename T >
-inline Variant cjv( T value ) {
+static inline Variant cjv( T value ) {
     return Variant( new boost::any( value ) );
 }
 
 
+
 // @alias cjv()
 template< typename T >
-inline Variant createVariant( T value ) {
-    return Variant( new boost::any( value ) );
+static inline Variant createVariant( T value ) {
+    return cjv( value );
 }
 
 
@@ -82,22 +83,40 @@ typedef boost::function< std::string( const CouchFine::Variant& v ) >  fnCreateJ
 // Методы для взаимодействия с Object
 
 /**
+* @return Преобразованный к заданному типу Variant (static_cast).
+*//* - @todo fine Добавить static_cast к Variant. Наследовать от boost::any?
+inline operator const Object& ( const Variant& var ) {
+    return boost::any_cast< Object& >( *var );
+}
+*/
+
+
+
+/**
 * @return Значение поля объекта, преобразованное к заданному типу или
 *         'def' если поле с заданным именем в объекте не найдено.
 */
 template < typename T >
-inline T v( const Object& o, const std::string& field, const T& def = T() ) {
+static inline T v( const Object& o, const std::string& field, const T& def = T() ) {
     const auto ftr = o.find( field );
     return (ftr == o.cend())
         ? def : boost::any_cast< T >( *ftr->second );
 }
 
 
+// @alias v()
+template < typename T >
+static inline T value( const Object& o, const std::string& field, const T& def = T() ) {
+    return v< T >( o, field, def );
+}
+
+
+
 
 /**
 * @return UID объекта или пустая строка, если UID не задан.
 */
-inline uid_t uid( const Object& o ) {
+static inline uid_t uid( const Object& o ) {
     auto ftr = o.find( "_id" );
     if (ftr != o.cend()) {
         return boost::any_cast< std::string >( *ftr->second );
@@ -117,7 +136,7 @@ inline uid_t uid( const Object& o ) {
 *           store >> doc.uid( "MyID", "MyRevision" )
 *         Такой код извлечёт документ из хранилища в 'doc'.
 */
-inline Object& uid( Object& o, const uid_t& u, const rev_t& r = "" ) {
+static inline Object& uid( Object& o, const uid_t& u, const rev_t& r = "" ) {
     assert( !u.empty() && "Пустой UID." );
     assert( (o.find( "id" ) == o.cend())
         && "Обнаружено поле 'id'. Используйте '_id' для корректного сохранения документа в хранилище без потери производительности." );
@@ -129,7 +148,7 @@ inline Object& uid( Object& o, const uid_t& u, const rev_t& r = "" ) {
 }
 
 
-inline Object& uid( Object& o, const uidrev_t& ur ) {
+static inline Object& uid( Object& o, const uidrev_t& ur ) {
     return uid( o, ur.first, ur.second );
 }
 
@@ -138,7 +157,7 @@ inline Object& uid( Object& o, const uidrev_t& ur ) {
 /**
 * @return true, если задан UID.
 */
-inline bool hasUID( const Object& o ) {
+static inline bool hasUID( const Object& o ) {
     assert( (o.find( "id" ) == o.cend())
         && "Обнаружено поле 'id'. Вероятно, ошибка: используйте '_id' для корректного сохранения документа в хранилище." );
     const auto ftr = o.find( "_id" );
@@ -150,7 +169,7 @@ inline bool hasUID( const Object& o ) {
 /**
 * @return Ревизия объекта или пустая строка, если ревизия не задана.
 */
-inline rev_t revision( const Object& o ) {
+static inline rev_t revision( const Object& o ) {
     auto ftr = o.find( "_rev" );
     if (ftr != o.cend()) {
         return boost::any_cast< std::string >( *ftr->second );
@@ -171,7 +190,7 @@ inline rev_t revision( const Object& o ) {
 *           store >> doc.rev( "MyRevision" )
 *         Такой код извлечёт документ из хранилища в 'doc'.
 */
-inline Object& revision( Object& o, const rev_t& r ) {
+static inline Object& revision( Object& o, const rev_t& r ) {
     assert( !r.empty() && "Пустая ревизия." );
     o[ "_rev" ] = cjv( r );
     return o;
@@ -182,7 +201,7 @@ inline Object& revision( Object& o, const rev_t& r ) {
 /**
 * @return true, если задана ревизия.
 */
-inline bool hasRevision( const Object& o ) {
+static inline bool hasRevision( const Object& o ) {
     const auto ftr = o.find( "_rev" );
     return (ftr != o.cend());
 }
@@ -194,7 +213,7 @@ inline bool hasRevision( const Object& o ) {
 * @return Сообщение об ошибке или пустая строка, если ошибки нет.
 *         Удобно для проверки после обращения с запросом к хранилищу.
 */
-inline std::string error( const Object& o ) {
+static inline std::string error( const Object& o ) {
     const auto fte = o.find( "error" );
     if (fte != o.cend()) {
         std::string e = boost::any_cast< std::string >( *fte->second );
@@ -208,7 +227,7 @@ inline std::string error( const Object& o ) {
 
 
 
-inline std::string error( const Variant& var ) {
+static inline std::string error( const Variant& var ) {
     return ( var && (var->type() == typeid( Object )) )
         ? error( boost::any_cast< Object >( *var ) )
         : "";
@@ -221,12 +240,12 @@ inline std::string error( const Variant& var ) {
 /**
 * @return true, если объект является сообщением CouchDB об ошибке.
 */
-inline bool hasError( const Object& o ) {
+static inline bool hasError( const Object& o ) {
     return (o.find( "error" ) != o.cend());
 }
 
 
-inline bool hasError( const Variant& var ) {
+static inline bool hasError( const Variant& var ) {
     return var && (var->type() == typeid( Object ))
         && hasError( boost::any_cast< Object >( *var ) );
 }
@@ -235,10 +254,24 @@ inline bool hasError( const Variant& var ) {
 /**
 * @return true, если объект содержит поле 'reason' (детализирует ошибку).
 */
-inline bool hasReason( const Object& o ) {
+static inline bool hasReason( const Object& o ) {
     return (o.find( "reason" ) != o.cend());
 }
 
+
+
+
+
+/**
+* @return Значение поля 'ok' или false, если поле не найдено. Это поле часто
+*         идёт в ответе сервера.
+*/
+static inline bool ok( const Object& o ) {
+    const auto ftr = o.find( "ok" );
+    return (ftr == o.cend())
+        ? false
+        : boost::any_cast< bool >( *ftr->second );
+}
 
 
 

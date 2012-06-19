@@ -50,7 +50,8 @@ const std::map< std::string, std::string >  Communication::FROM_RFC1738 = boost:
 
 
 static Variant parseData( const std::string& buffer ) {
-   Variant var = json::parse( buffer.begin(), buffer.end() );
+
+   const Variant var = json::parse( buffer.begin(), buffer.end() );
 
    /* - Быстрее. Проще. Обходимся.
    // Преобразуем результат в наш Object: есть Object, есть Array...
@@ -83,7 +84,7 @@ static Variant parseData( const std::string& buffer ) {
 
 static int writer( char *data, size_t size, size_t nmemb, std::string* dest ) {
     int written = 0;
-    if ( dest ){
+    if ( dest ) {
         written = size * nmemb;
         dest->append( data, written );
     }
@@ -318,12 +319,12 @@ void Communication::getRawData(
 
    buffer.clear();
 
-   if (headers.size() > 0 || presentData){
+   if ( !headers.empty() || presentData ) {
       struct curl_slist* chunk = nullptr;
 
       HeaderMap::const_iterator header = headers.begin();
       const HeaderMap::const_iterator& headerEnd = headers.end();
-      for(; header != headerEnd; ++header){
+      for(; header != headerEnd; ++header) {
          std::string headerStr = header->first + ": " + header->second;
          chunk = curl_slist_append(chunk, headerStr.c_str());
       }
@@ -377,7 +378,7 @@ void Communication::getRawData(
    }
 
 
-   if ( presentData || (headers.size() > 0) ) {
+   if ( presentData || !headers.empty() ) {
       if (curl_easy_setopt( curl, CURLOPT_UPLOAD, 0L ) != CURLE_OK)
          throw Exception( "Unable to reset upload request" );
 

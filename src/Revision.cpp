@@ -16,17 +16,17 @@ Revision::Revision(const Revision &revision)
 {
 }
 
-Revision::~Revision(){
+Revision::~Revision() {
 }
 
-const std::string& Revision::getVersion() const{
+const std::string& Revision::getVersion() const {
    return version;
 }
 
-const std::string& Revision::getStatus() const{
+const std::string& Revision::getStatus() const {
    return status;
 }
 
-std::ostream& operator<<(std::ostream& out, const CouchFine::Revision& rev){
+std::ostream& operator<<(std::ostream& out, const CouchFine::Revision& rev) {
    return out << "{rev: " << rev.getVersion() << ", status: " << rev.getStatus() << "}";
 }

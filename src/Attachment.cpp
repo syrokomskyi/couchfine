@@ -24,10 +24,10 @@ Attachment::Attachment(const Attachment &attachment)
 {
 }
 
-Attachment::~Attachment(){
+Attachment::~Attachment() {
 }
 
-Attachment& Attachment::operator=(Attachment &attachment){
+Attachment& Attachment::operator=(Attachment &attachment) {
    comm     = attachment.comm;
    db       = attachment.db;
    document = attachment.document;
@@ -37,32 +37,33 @@ Attachment& Attachment::operator=(Attachment &attachment){
    return *this;
 }
 
-const std::string& Attachment::getID() const{
+const std::string& Attachment::getID() const {
    return id;
 }
 
-const std::string& Attachment::getRevision() const{
+const std::string& Attachment::getRevision() const {
    return revision;
 }
 
-const std::string& Attachment::getContentType() const{
+const std::string& Attachment::getContentType() const {
    return contentType;
 }
 
 std::string Attachment::getData() const {
    std::string data;
 
-   if(rawData.size() > 0) {
+   if ( !rawData.empty() ) {
       data = rawData;
    } else {
       std::string url = "/" + db + "/" + document + "/" + id;
-      if(revision.size() > 0)
+      if ( !revision.empty() ) {
          url += "?rev=" + revision;
+      }
       data = comm.getRawData(url);
 
-      if (data.size() > 0 && data[0] == '{') {
+      if ( !data.empty() && (data[0] == '{') ) {
          // check to make sure we did not receive an error
-         Object obj = boost::any_cast<Object>( *comm.getData( url ) );
+         const Object obj = boost::any_cast< Object >( *comm.getData( url ) );
          if ( hasError( obj ) ) {
             throw Exception( "Could not retrieve data for attachment '" + id + "': " + error( obj ) );
          }

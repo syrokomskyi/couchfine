@@ -112,7 +112,7 @@ inline void printHelper( std::ostream& out, const boost::any& value, const std::
          bool addComma = false;
          auto data = obj.cbegin();
          const auto& data_end = obj.cend();
-         for(; data != data_end; ++data){
+         for(; data != data_end; ++data) {
             if ( addComma ) {
                out << ", ";
             } else {
@@ -133,7 +133,7 @@ inline void printHelper( std::ostream& out, const boost::any& value, const std::
 #endif
          out << "}";
       }
-      else if(type == typeid(Array)){
+      else if(type == typeid(Array)) {
          Array array = boost::any_cast<Array>(value);
 
          out << "[";
@@ -144,7 +144,7 @@ inline void printHelper( std::ostream& out, const boost::any& value, const std::
          bool addComma = false;
          Array::iterator        data     = array.begin();
          const Array::iterator &data_end = array.end();
-         for( ; data != data_end; ++data){
+         for( ; data != data_end; ++data) {
             if ( addComma ) {
                out << ", ";
             } else {

@@ -6,7 +6,7 @@
 
 namespace CouchFine {
 
-class Database{
+class Database {
    friend class Connection;
 
    protected:
@@ -62,15 +62,16 @@ class Database{
       }
 
 
-      std::vector<Document> listDocuments();
-      Document getDocument(const std::string&, const std::string& rev = "" );
+      std::vector< Document >  listDocuments();
+
+      Document getDocument( const std::string&, const std::string& rev = "" );
 
 
       inline bool hasDocument( const std::string& id ) {
         // @todo optimize?
         const std::string url = "/" + name + "/" + id;
         const Variant var = comm.getData( url );
-        Object obj = boost::any_cast< Object >( *var );
+        const Object obj = boost::any_cast< Object >( *var );
 
         return !hasError( obj );
       }
@@ -131,7 +132,7 @@ class Database{
         const std::string designUID = getDesignUID( designName );
         const std::string url = "/" + name + "/" + designUID + "/_view/" + viewName + "?limit=1";
         const Variant var = comm.getData( url );
-        Object obj = boost::any_cast< Object >( *var );
+        const Object obj = boost::any_cast< Object >( *var );
 
         return !hasError( obj );
       }

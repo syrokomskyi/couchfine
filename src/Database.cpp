@@ -34,7 +34,7 @@ Database::Database(const Database &db)
 
 
 
-Database::~Database(){
+Database::~Database() {
 }
 
 
@@ -63,37 +63,33 @@ size_t Database::countDoc() const {
 
 
 size_t Database::countDesign() const {
-    Variant var = comm.getData( "/" + name + "/_all_docs?startkey=\"_design/a\"&endkey=\"_design/z\"" );
-    Object  obj = boost::any_cast< Object >( *var );
-    const Array rows = boost::any_cast< Array >( *obj["rows"] );
+    const Variant var = comm.getData( "/" + name + "/_all_docs?startkey=\"_design/a\"&endkey=\"_design/z\"" );
+    const Object obj = boost::any_cast< Object >( *var );
+    const Array rows = boost::any_cast< Array >( *obj.at( "rows" ) );
     return rows.size();
 }
 
 
 
-std::vector<Document> Database::listDocuments(){
-   Variant var = comm.getData("/" + name + "/_all_docs");
-   Object  obj = boost::any_cast<Object>(*var);
+std::vector< Document >  Database::listDocuments() {
+   const Variant var = comm.getData( "/" + name + "/_all_docs" );
+   const Object obj = boost::any_cast< Object >( *var );
 
-   int numRows = boost::any_cast<int>(*obj["total_rows"]);
+   const int numRows = boost::any_cast< int >( *obj.at( "total_rows" ) );
 
-   std::vector<Document> docs;
-
-   if(numRows > 0){
-      Array rows = boost::any_cast<Array>(*obj["rows"]);
-
-      Array::iterator        row     = rows.begin();
-      const Array::iterator &row_end = rows.end();
-      for(; row != row_end; ++row){
-         Object docObj = boost::any_cast<Object>(**row);
-         Object values = boost::any_cast<Object>(*docObj["value"]);
-
-         Document doc(comm, name,
-                      boost::any_cast<std::string>(*docObj["id"]),
-                      boost::any_cast<std::string>(*docObj["key"]),
-                      boost::any_cast<std::string>(*values["rev"]));
-
-         docs.push_back(doc);
+   std::vector< Document >  docs;
+   if (numRows > 0) {
+      Array rows = boost::any_cast< Array >( *obj.at( "rows" ) );
+      for (auto itr = rows.cbegin(); itr != rows.cend(); ++itr) {
+         const Object docObj = boost::any_cast< Object >( **itr );
+         const Object values = boost::any_cast< Object >( *docObj.at( "value" ) );
+         const Document doc(
+             comm, name,
+             CouchFine::uid( docObj ),
+             boost::any_cast< std::string >( *docObj.at( "key" ) ),
+             CouchFine::revision( values )
+         );
+         docs.push_back( doc );
       }
    }
 
@@ -108,7 +104,7 @@ Document Database::getDocument( const std::string& id, const std::string& rev ) 
 
     // (!) Целые числа хранятся как знаковый тип, при превышении лимита - исключение
     const Variant var = comm.getData( url );
-    Object obj = boost::any_cast< Object >( *var );
+    const Object obj = boost::any_cast< Object >( *var );
     if ( hasError( obj ) ) {
         throw Exception("Document " + id + " (v" + rev + ") not found: " + error( obj ) );
     }
@@ -128,14 +124,14 @@ Document Database::getDocument( const std::string& id, const std::string& rev ) 
 std::vector< std::string >  Database::getUUIDs( size_t n ) const {
 
     const Variant var = comm.getData( "/_uuids?count=100" );
-    Object obj = boost::any_cast< Object >( *var );
+    const Object obj = boost::any_cast< Object >( *var );
     if ( hasError( obj ) ) {
         throw Exception( "Set of ID's is not created: " + error( obj ) );
     }
 
     // Переводим в std::vector для более быстрой работы со списком
     std::vector< std::string >  uuids;
-    const auto a = boost::any_cast< Array >( *obj["uuids"] );
+    const auto a = boost::any_cast< Array >( *obj.at( "uuids" ) );
     for (auto itr = a.cbegin(); itr != a.cend(); ++itr) {
         const Variant v = *itr;
         const auto id = boost::any_cast< std::string >( *v );
@@ -172,14 +168,14 @@ Document Database::createDocument(
         Object attachmentObj;
         for (auto attachment = attachments.cbegin(); attachment != attachments.cend(); ++attachment) {
            Object attachmentData;
-           attachmentData["content_type"] = createVariant( attachment->getContentType() );
-           attachmentData["data"        ] = createVariant( attachment->getData() );
-           attachmentObj[ attachment->getID() ] = createVariant( attachmentData );
+           attachmentData["content_type"] = cjv( attachment->getContentType() );
+           attachmentData["data"        ] = cjv( attachment->getData() );
+           attachmentObj[ attachment->getID() ] = cjv( attachmentData );
         }
 
         Object obj = boost::any_cast< Object >( *data );
-        obj["_attachments"] = createVariant( attachmentObj );
-        data = createVariant( obj );
+        obj["_attachments"] = cjv( attachmentObj );
+        data = cjv( obj );
     }
 
     const std::string json = createJSON( data );
@@ -194,10 +190,10 @@ Document Database::createDocument(
 
 Document Database::createDocument( const std::string& json, const std::string& id ) const {
 
-    const Variant var = (id.size() > 0) ?
-        comm.getData( "/" + name + "/" + id, "PUT",  json ) :
-        comm.getData( "/" + name + "/",      "POST", json );
-
+    const Variant var = id.empty()
+        ? comm.getData( "/" + name + "/",      "POST", json )
+        : comm.getData( "/" + name + "/" + id, "PUT",  json );
+        
     const Object obj = boost::any_cast< Object >( *var );
     if ( hasError( obj ) ) {
        throw Exception( "Document could not be created: " + error( obj ) );
@@ -246,12 +242,12 @@ CouchFine::Array Database::createBulk(
 
     // @see http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API#Modify_Multiple_Documents_With_a_Single_Request
     Object o;
-    //o["docs"] = createVariant( docs );
-    o["docs"] = createVariant( preparedDocs );
+    //o["docs"] = cjv( docs );
+    o["docs"] = cjv( preparedDocs );
     const std::string json = fnCreateJSON
-        ? ( fnCreateJSON )( createVariant( o ) )
-        : createJSON( createVariant( o ) );
-    //std::cout << std::endl << createVariant( o ) << std::endl << std::endl;
+        ? ( fnCreateJSON )( cjv( o ) )
+        : createJSON( cjv( o ) );
+    //std::cout << std::endl << cjv( o ) << std::endl << std::endl;
 
     const Variant var = comm.getData( "/" + name + "/_bulk_docs",  "POST",  json );
     if ( hasError( var ) ) {
@@ -382,7 +378,7 @@ void Database::deleteDocument( const std::string& id, const std::string& rev ) {
 
     // Удаляем документ
     const Variant var = comm.getData( url + "?rev=" + rev, "DELETE" );
-    Object obj = boost::any_cast< Object >( *var );
+    const Object obj = boost::any_cast< Object >( *var );
     if ( hasError( obj ) ) {
         throw error( obj );
     }

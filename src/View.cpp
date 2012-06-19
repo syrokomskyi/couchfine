@@ -41,7 +41,7 @@ View View::valueOf(
     }
 
     // Файлы формируем согласно контексту
-    if (context.size() > 0) {
+    if ( !context.empty() ) {
         template_t t;
         sMap = t.render( sMap, context );
         sReduce = t.render( sReduce, context );

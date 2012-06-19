@@ -27,13 +27,13 @@ Document::Document(const Document &doc)
 {
 }
 
-Document::~Document(){
+Document::~Document() {
 }
 
 
 
 
-Document& Document::operator=(Document& doc){
+Document& Document::operator=(Document& doc) {
    db       = doc.getDatabase();
    id       = doc.getID();
    key      = doc.getKey();
@@ -45,42 +45,42 @@ Document& Document::operator=(Document& doc){
 
 
 
-bool Document::operator==(const Document &doc){
+bool Document::operator==(const Document &doc) {
    return (id == doc.getID());
 }
 
 
 
 
-Communication& Document::getCommunication(){
+Communication& Document::getCommunication() {
    return comm;
 }
 
 
 
 
-const std::string& Document::getDatabase() const{
+const std::string& Document::getDatabase() const {
    return db;
 }
 
 
 
 
-const std::string& Document::getID() const{
+const std::string& Document::getID() const {
    return id;
 }
 
 
 
 
-const std::string& Document::getKey() const{
+const std::string& Document::getKey() const {
    return key;
 }
 
 
 
 
-const std::string& Document::getRevision() const{
+const std::string& Document::getRevision() const {
    return revision;
 }
 
@@ -101,30 +101,31 @@ void Document::setRevision( const std::string& revision ) {
 
 
 
-std::string Document::getURL(bool withRevision) const{
+std::string Document::getURL( bool withRevision ) const {
    std::string url = "/" + getDatabase() + "/" + getID();
-   if(withRevision && revision.size() > 0)
+   if ( withRevision && !revision.empty() ) {
       url += "?rev=" + revision;
+   }
    return url;
 }
 
 
 
 
-std::vector<Revision> Document::getAllRevisions(){
-   std::vector<Revision> revisions;
+std::vector<Revision> Document::getAllRevisions() {
+   std::vector< Revision > revisions;
 
-   Variant var = comm.getData(getURL(false) + "?revs_info=true");
-   Object  obj = boost::any_cast<Object>(*var);
+   const Variant var = comm.getData( getURL( false ) + "?revs_info=true" );
+   const Object obj = boost::any_cast< Object >( *var );
+   const Array revInfo = boost::any_cast< Array >( *obj.at( "_revs_info" ) );
 
-   Array revInfo = boost::any_cast<Array>(*obj["_revs_info"]);
-
-   Array::iterator        revInfoItr = revInfo.begin();
-   const Array::iterator &revInfoEnd = revInfo.end();
-   for(; revInfoItr != revInfoEnd; ++revInfoItr){
-      Object revObj    = boost::any_cast<Object>(**revInfoItr);
-      revisions.push_back(Revision(boost::any_cast<std::string>(*revObj["rev"]),
-                                   boost::any_cast<std::string>(*revObj["status"])));
+   for (auto itr = revInfo.cbegin(); itr != revInfo.cend(); ++itr) {
+      const Object revObj = boost::any_cast< Object >( **itr );
+      revisions.push_back( Revision(
+          CouchFine::revision( revObj ),
+          //boost::any_cast<std::string>( *revObj["status"] )
+          CouchFine::value< std::string >( revObj, "status" )
+      ) );
    }
 
    return revisions;
@@ -154,7 +155,7 @@ Variant Document::getData() const {
 
 bool Document::addAttachment(const std::string& attachmentId,
                              const std::string& contentType,
-                             const std::string& data){
+                             const std::string& data) {
    std::string url = getURL(false) + "/" + attachmentId;
    if ( !revision.empty() ) {
       url += "?rev=" + revision;
@@ -164,20 +165,20 @@ bool Document::addAttachment(const std::string& attachmentId,
    headers["Content-Type"] = contentType;
 
    const Variant var = comm.getData( url, headers, "PUT", data );
-   Object obj = boost::any_cast< Object >( *var );
+   const Object obj = boost::any_cast< Object >( *var );
    if ( hasError( obj ) ) {
       throw Exception( "Could not create attachment '" + attachmentId + "': " + error( obj ) );
    }
 
-   revision = boost::any_cast< std::string >( *obj["rev"] );
+   revision = CouchFine::revision( obj );
 
-   return boost::any_cast< bool >( *obj["ok"] );
+   return ok( obj );
 }
 
 
 
 
-Attachment Document::getAttachment(const std::string& attachmentId){
+Attachment Document::getAttachment(const std::string& attachmentId) {
    Object data = boost::any_cast<Object>(*getData());
 
    if(data.find("_attachments") == data.end())
@@ -195,7 +196,7 @@ Attachment Document::getAttachment(const std::string& attachmentId){
 
 
 
-std::vector<Attachment> Document::getAllAttachments(){
+std::vector<Attachment> Document::getAllAttachments() {
    Object data = boost::any_cast<Object>(*getData());
 
    if(data.find("_attachments") == data.end())
@@ -207,7 +208,7 @@ std::vector<Attachment> Document::getAllAttachments(){
 
    Object::iterator attachmentItr = attachments.begin();
    const Object::iterator &attachmentEnd = attachments.end();
-   for(; attachmentItr != attachmentEnd; ++attachmentItr){
+   for(; attachmentItr != attachmentEnd; ++attachmentItr) {
       const std::string& attachmentId = attachmentItr->first;
       Object attachment = boost::any_cast<Object>(*attachmentItr->second);
 
@@ -228,29 +229,35 @@ bool Document::removeAttachment( const std::string& attachmentId ) {
    }
 
    const Variant var = comm.getData( url, "DELETE" );
-   Object obj = boost::any_cast< Object >( *var );
+   const Object obj = boost::any_cast< Object >( *var );
    if ( hasError( obj ) ) {
       throw Exception( "Could not delete attachment '" + attachmentId + "': " + error( obj ) );
    }
 
-   revision = boost::any_cast<std::string>(*obj["rev"]);
+   revision = CouchFine::revision( obj );
 
-   return boost::any_cast<bool>(*obj["ok"]);
+   return ok( obj );
 }
 
 
 
 
-Document Document::copy(const std::string& targetId, const std::string& targetRev){
+Document Document::copy( const uid_t& targetId, const rev_t& targetRev ) {
    Communication::HeaderMap headers;
-   if(targetRev.size() > 0)
+   /* - Заменено. См. ниже.
+   if ( targetRev.size() > 0 ) {
       headers["Destination"] = targetId + "?rev=" + targetRev;
-   else
+   } else {
       headers["Destination"] = targetId;
+   }
+   */
+   headers["Destination"] = targetRev.empty()
+       ? targetId
+       : (targetId + "?rev=" + targetRev);
 
-   Variant var = comm.getData(getURL(true), headers, "COPY");
-   Object  obj = boost::any_cast<Object>(*var);
-   if( hasError( obj ) ) {
+   const Variant var = comm.getData( getURL( true ), headers, "COPY" );
+   const Object obj = boost::any_cast< Object >( *var );
+   if ( hasError( obj ) ) {
       throw Exception( "Could not copy document '" + getID() + "' to '" + targetId + "': " + error( obj ) );
    }
 
@@ -265,9 +272,9 @@ Document Document::copy(const std::string& targetId, const std::string& targetRe
 Document Document::update( Database& db, const Object& jo ) {
 
     Object o = jo;
-    o["id"] = createVariant( this->getID() );
-    o["rev"] = createVariant( this->getRevision() );
-    const auto doc = db.createDocument( createVariant( o ), this->getID() );
+    o["id"] = cjv( getID() );
+    o["rev"] = cjv( getRevision() );
+    const auto doc = db.createDocument( cjv( o ), getID() );
 
     return doc;
 }
@@ -275,16 +282,15 @@ Document Document::update( Database& db, const Object& jo ) {
 
 
 
-bool Document::remove(){
-   Variant var = comm.getData(getURL(true), "DELETE");
-   Object  obj = boost::any_cast<Object>(*var);
-
-   return boost::any_cast<bool>(*obj["ok"]);
+bool Document::remove() {
+   const Variant var = comm.getData( getURL( true ), "DELETE" );
+   const Object obj = boost::any_cast< Object >( *var );
+   return ok( obj );
 }
 
 
 
 
-std::ostream& operator<<(std::ostream& out, const CouchFine::Document &doc){
+std::ostream& operator<<(std::ostream& out, const CouchFine::Document &doc) {
    return out << "{id: " << doc.getID() << ", key: " << doc.getKey() << ", rev: " << doc.getRevision() << "}";
 }
