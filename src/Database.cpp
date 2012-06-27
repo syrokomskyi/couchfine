@@ -146,7 +146,7 @@ std::vector< std::string >  Database::getUUIDs( size_t n ) const {
 
 
 Document Database::createDocument( const Object& obj, const std::string& id ) const {
-   return createDocument( cjv( obj ),  std::vector< Attachment >(),  id );
+   return createDocument( typelib::json::cjv( obj ),  std::vector< Attachment >(),  id );
 }
 
 
@@ -168,14 +168,14 @@ Document Database::createDocument(
         Object attachmentObj;
         for (auto attachment = attachments.cbegin(); attachment != attachments.cend(); ++attachment) {
            Object attachmentData;
-           attachmentData["content_type"] = cjv( attachment->getContentType() );
-           attachmentData["data"        ] = cjv( attachment->getData() );
-           attachmentObj[ attachment->getID() ] = cjv( attachmentData );
+           attachmentData["content_type"] = typelib::json::cjv( attachment->getContentType() );
+           attachmentData["data"        ] = typelib::json::cjv( attachment->getData() );
+           attachmentObj[ attachment->getID() ] = typelib::json::cjv( attachmentData );
         }
 
         Object obj = boost::any_cast< Object >( *data );
-        obj["_attachments"] = cjv( attachmentObj );
-        data = cjv( obj );
+        obj["_attachments"] = typelib::json::cjv( attachmentObj );
+        data = typelib::json::cjv( obj );
     }
 
     const std::string json = createJSON( data );
@@ -235,19 +235,19 @@ CouchFine::Array Database::createBulk(
             }
         }
 
-        preparedDocs.push_back( cjv( obj ) );
+        preparedDocs.push_back( typelib::json::cjv( obj ) );
 
     } // for (auto itr = docs.cbegin(); itr != docs.cend(); ++itr)
 
 
     // @see http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API#Modify_Multiple_Documents_With_a_Single_Request
     Object o;
-    //o["docs"] = cjv( docs );
-    o["docs"] = cjv( preparedDocs );
+    //o["docs"] = typelib::json::cjv( docs );
+    o["docs"] = typelib::json::cjv( preparedDocs );
     const std::string json = fnCreateJSON
-        ? ( fnCreateJSON )( cjv( o ) )
-        : createJSON( cjv( o ) );
-    //std::cout << std::endl << cjv( o ) << std::endl << std::endl;
+        ? ( fnCreateJSON )( typelib::json::cjv( o ) )
+        : createJSON( typelib::json::cjv( o ) );
+    //std::cout << std::endl << typelib::json::cjv( o ) << std::endl << std::endl;
 
     const Variant var = comm.getData( "/" + name + "/_bulk_docs",  "POST",  json );
     if ( hasError( var ) ) {
@@ -272,7 +272,7 @@ CouchFine::Array Database::createBulk(
         const auto& type = itr->get()->type();
         if (type == typeid( Object )) {
             // ошибка, однозначно
-            std::cerr << cjv( a );
+            std::cerr << typelib::json::cjv( a );
             const CouchFine::Object obj = boost::any_cast< CouchFine::Object >( *itr );
             throw Exception( "Part of set of documents could not be created. First error: " + obj.error() );
         }
@@ -345,11 +345,11 @@ std::string Database::createBulk(
     CouchFine::Object o = doc;
     const std::string id = accUID.back();
     accUID.pop_back();
-    o["_id"] = cjv( id );
+    o["_id"] = typelib::json::cjv( id );
 
     // ƒобавл€ем документ в аккумул€тор и провер€ем, не пора ли сохранить
     // накопленные документы
-    acc.push_back( cjv( doc ) );
+    acc.push_back( typelib::json::cjv( doc ) );
     if (acc.size() >= ACC_SIZE) {
         createBulk( acc, fnCreateJSON );
         acc.clear();
@@ -416,12 +416,12 @@ void Database::addView(
     auto ds = boost::any_cast< CouchFine::Object >( *jo["views"] );
 
     CouchFine::Object content;
-    content["map"] = cjv( map );
+    content["map"] = typelib::json::cjv( map );
     if ( !reduce.empty() ) {
-        content["reduce"] = cjv( reduce );
+        content["reduce"] = typelib::json::cjv( reduce );
     }
-    ds[name] = cjv( content );
+    ds[name] = typelib::json::cjv( content );
 
-    jo["views"] = cjv( ds );
-    createDocument( cjv( jo ), designUID );
+    jo["views"] = typelib::json::cjv( ds );
+    createDocument( typelib::json::cjv( jo ), designUID );
 }

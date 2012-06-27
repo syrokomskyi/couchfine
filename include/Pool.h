@@ -58,7 +58,7 @@ inline CouchFine::Pool& operator<<(
     // Например, _id и _rev.
     CouchFine::Object* doc
 ) {
-    pool << &CouchFine::cjv( doc );
+    pool << &typelib::json::cjv( doc );
     return pool;
 }
 
@@ -70,7 +70,7 @@ inline CouchFine::Pool& operator<<(
     CouchFine::Pool& pool,
     const CouchFine::Object& doc
 ) {
-    pool.push_back( CouchFine::cjv( doc ) );
+    pool.push_back( typelib::json::cjv( doc ) );
     return pool;
 }
 */

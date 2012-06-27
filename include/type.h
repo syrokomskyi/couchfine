@@ -1,10 +1,12 @@
 #pragma once
 
 #include "configure.h"
+#include <json-type.h>
 #include <string>
 #include <boost/algorithm/string.hpp>
 #include <boost/function.hpp>
 
+// @todo optimize option Перенесено в typelib. Дополнить typelib этой возможностью.
 #ifdef SAVE_ORDER_FIELDS
     #include <map>
 #else
@@ -37,38 +39,22 @@ typedef std::pair< uid_t, rev_t >  uidrev_t;
 
 /**
 * Типы, удобные для работы с TinyJSON.
-*
-* @todo Взять за основу typelib?
-*/
+*//* - Заменены на типы из typelib. См. ниже.
 typedef boost::shared_ptr< boost::any >  Variant;
 typedef std::deque< Variant >            Array;
-
 
 #ifdef SAVE_ORDER_FIELDS
 typedef std::map< std::string, Variant >  Object;
 #else
 typedef boost::unordered_map< std::string, Variant >  Object;
 #endif
-
-
-/**
-* @return Значение, обёрнутое в CouchFine::Variant.
-*
-* @alias createVariant()
 */
-template< typename T >
-static inline Variant cjv( T value ) {
-    return Variant( new boost::any( value ) );
-}
 
+typedef typelib::json::Variant  Variant;
+typedef typelib::json::Array    Array;
+typedef typelib::json::Object   Object;
 
-
-// @alias cjv()
-template< typename T >
-static inline Variant createVariant( T value ) {
-    return cjv( value );
-}
-
+// @see typelib::json::cjv()
 
 
 
@@ -140,9 +126,9 @@ static inline Object& uid( Object& o, const uid_t& u, const rev_t& r = "" ) {
     assert( !u.empty() && "Пустой UID." );
     assert( (o.find( "id" ) == o.cend())
         && "Обнаружено поле 'id'. Используйте '_id' для корректного сохранения документа в хранилище без потери производительности." );
-    o[ "_id" ] = cjv( u );
+    o[ "_id" ] = typelib::json::cjv( u );
     if ( !r.empty() ) {
-        o[ "_rev" ] = cjv( r );
+        o[ "_rev" ] = typelib::json::cjv( r );
     }
     return o;
 }
@@ -192,7 +178,7 @@ static inline rev_t revision( const Object& o ) {
 */
 static inline Object& revision( Object& o, const rev_t& r ) {
     assert( !r.empty() && "Пустая ревизия." );
-    o[ "_rev" ] = cjv( r );
+    o[ "_rev" ] = typelib::json::cjv( r );
     return o;
 }
 
@@ -288,8 +274,8 @@ inline CouchFine::Object& operator<<(
     CouchFine::Object& o,
     const std::pair< const std::string&, const boost::any& >&  kv
 ) {
-    // не создаём матрёшек: обеспечивает cjv()
-    o[ kv.first ] = CouchFine::cjv( kv.second );
+    // не создаём матрёшек: обеспечивает typelib::json::cjv()
+    o[ kv.first ] = typelib::json::cjv( kv.second );
     return o;
 }
 
@@ -300,7 +286,7 @@ inline CouchFine::Object& operator<<(
     CouchFine::Object& o,
     const std::pair< std::string, const T& >&  kv
 ) {
-    o[ kv.first ] = CouchFine::cjv( kv.second );
+    o[ kv.first ] = typelib::json::cjv( kv.second );
     return o;
 }
 */

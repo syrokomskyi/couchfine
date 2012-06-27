@@ -1,5 +1,4 @@
 #include "../include/Communication.h"
-#include "../external/tinyjson/tinyjson.hpp"
 #include <boost/assign.hpp>
 
 using namespace CouchFine;
@@ -45,13 +44,21 @@ const std::map< std::string, std::string >  Communication::FROM_RFC1738 = boost:
 ;
 
 
+const std::map< std::string, std::string >  Communication::FROM_RFC1738_SLASH = boost::assign::list_of
+    ( std::make_pair( "%0A", "\n" ) )
+;
+
 
 
 
 
 static Variant parseData( const std::string& buffer ) {
-
-   const Variant var = json::parse( buffer.begin(), buffer.end() );
+   
+   /* - Заменено на парсер от typelib. См. ниже.
+   const auto t = json::parse( buffer.begin(), buffer.end() );
+   const Variant var( t );
+   */
+   const Variant var( buffer );
 
    /* - Быстрее. Проще. Обходимся.
    // Преобразуем результат в наш Object: есть Object, есть Array...
@@ -63,7 +70,7 @@ static Variant parseData( const std::string& buffer ) {
    if (type == typeid( Object ) ) {
        const Object oldObj = boost::any_cast< Object >( *var );
        const Object obj = Object( oldObj );
-       var = cjv( obj );
+       var = typelib::json::cjv( obj );
 
    } else {
        // оставляем без изменений
@@ -300,6 +307,11 @@ void Communication::getRawData(
            [ &preparedData ] ( const std::map< std::string, std::string >::value_type&  code ) {
                boost::replace_all( preparedData, code.first, code.second );
        } );
+       /*
+       preparedData = curl_easy_escape( curl, data.c_str(), data.length() );
+       boost::replace_all( preparedData, "\n", " " );
+       boost::replace_all( preparedData, "%25", "%" );
+       */
 
    } else {
        preparedData = data;

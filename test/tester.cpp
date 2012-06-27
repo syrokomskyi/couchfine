@@ -44,11 +44,11 @@ static void printAttachments(CouchFine::Document &doc) {
 static CouchFine::Variant createRecord(int key, const std::string& value,
                                    const std::string& value2, double dValue) {
    CouchFine::Object obj;
-   obj["key"]    = CouchFine::cjv( key );
-   obj["value"]  = CouchFine::cjv( value );
-   obj["value2"] = CouchFine::cjv( value2 );
-   obj["dValue"] = CouchFine::cjv( dValue );
-   return CouchFine::cjv( obj );
+   obj["key"]    = typelib::json::cjv( key );
+   obj["value"]  = typelib::json::cjv( value );
+   obj["value2"] = typelib::json::cjv( value2 );
+   obj["dValue"] = typelib::json::cjv( dValue );
+   return typelib::json::cjv( obj );
 }
 
 
@@ -77,11 +77,11 @@ int main() {
       records.push_back(createRecord(89012, "T3", "C1" , 7.0));
 
       CouchFine::Object obj;
-      obj["x1"]      = CouchFine::cjv("A12345");
-      obj["x2"]      = CouchFine::cjv("ABCDEF");
-      obj["records"] = CouchFine::cjv(records);
+      obj["x1"]      = typelib::json::cjv("A12345");
+      obj["x2"]      = typelib::json::cjv("ABCDEF");
+      obj["records"] = typelib::json::cjv(records);
 
-      CouchFine::Variant data = CouchFine::cjv(obj);
+      CouchFine::Variant data = typelib::json::cjv(obj);
       cout << "Creating new document" << endl;
       CouchFine::Document doc = db.createDocument(data);
       cout << "Created doc: " << doc << endl;

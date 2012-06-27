@@ -272,9 +272,9 @@ Document Document::copy( const uid_t& targetId, const rev_t& targetRev ) {
 Document Document::update( Database& db, const Object& jo ) {
 
     Object o = jo;
-    o["id"] = cjv( getID() );
-    o["rev"] = cjv( getRevision() );
-    const auto doc = db.createDocument( cjv( o ), getID() );
+    o["id"] = typelib::json::cjv( getID() );
+    o["rev"] = typelib::json::cjv( getRevision() );
+    const auto doc = db.createDocument( typelib::json::cjv( o ), getID() );
 
     return doc;
 }

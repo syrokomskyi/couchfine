@@ -174,7 +174,7 @@ void Connection::clearDatabase( const std::string& name, bool includeDesign ) {
         doc.erase( "_rev" );
 
         std::ostringstream os;
-        os << cjv( doc );
+        os << typelib::json::cjv( doc );
         const std::string json = os.str();
         //std::cout << json << std::endl;
 

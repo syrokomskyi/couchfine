@@ -40,7 +40,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\Projects\workspace\utils\curl-7.25.0\include;$(BOOST_ROOT);$(IncludePath)</IncludePath>
+    <IncludePath>D:\Projects\workspace\typelib\include;D:\Projects\workspace\utils\curl-7.25.0\include;$(BOOST_ROOT);$(IncludePath)</IncludePath>
     <LibraryPath>D:\Projects\workspace\utils\curl-7.25.0\vc2010\lib;$(BOOST_ROOT)\bin.v2\libs\regex\build\msvc-10.0\debug\link-static\threading-multi</LibraryPath>
     <IntDir>V:\temp\couchfine++\$(Configuration)\</IntDir>
     <OutDir>$(ProjectDir)$(Configuration)\</OutDir>
@@ -113,7 +113,6 @@
     <ClInclude Include="external\plustache\include\context.hpp" />
     <ClInclude Include="external\plustache\include\plustache_types.hpp" />
     <ClInclude Include="external\plustache\include\template.hpp" />
-    <ClInclude Include="external\tinyjson\tinyjson.hpp" />
     <ClInclude Include="include\Attachment.h" />
     <ClInclude Include="include\Communication.h" />
     <ClInclude Include="include\configure.h" />

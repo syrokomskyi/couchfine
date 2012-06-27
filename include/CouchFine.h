@@ -141,7 +141,7 @@ inline CouchFine::Database& operator<<(
         store.createBulk( a, doc.fnCreateJSON );
 
     } else {
-        store.createDocument( CouchFine::cjv( *doc.o ) );
+        store.createDocument( typelib::json::cjv( *doc.o ) );
     }
 
     return store;
@@ -172,7 +172,7 @@ inline CouchFine::Database& operator<<(
     } else {
         // Переадресовываем запрос себе же - так проще
         CouchFine::Pool singleRepush;
-        singleRepush.push_back( CouchFine::cjv( *doc.o ) );
+        singleRepush.push_back( typelib::json::cjv( *doc.o ) );
         store << CouchFine::Mode::NewSkip( singleRepush, doc.fnCreateJSON );
 
     } // else if ( doc.p )
@@ -251,7 +251,7 @@ inline CouchFine::Database& operator<<(
                 const CouchFine::rev_t& rev = CouchFine::revision( ro );
                 CouchFine::uid( *obj, uid, rev );
                 // 'obj', увы, не ссылается на документ из 'doc.p'
-                //a.at( i ) = CouchFine::cjv( obj );
+                //a.at( i ) = typelib::json::cjv( obj );
                 // @todo fine А если документ всегда будет возвращать ошибку? Добавить
                 //       в сам документ ненавязчивый счётчик попыток записи.
                 continue;
@@ -291,7 +291,7 @@ inline CouchFine::Database& operator<<(
         // *Object*
         // Переадресовываем запрос себе же - так проще...
         CouchFine::Pool singleRepush;
-        singleRepush.push_back( CouchFine::cjv( *doc.o ) );
+        singleRepush.push_back( typelib::json::cjv( *doc.o ) );
         store << CouchFine::Mode::NewUpdate( singleRepush, doc.fnCreateJSON );
 
         // ...Но помним: ждут обновления объекта
@@ -408,6 +408,6 @@ inline CouchFine::Array& operator<<(
      ), "Тип не поддерживается." );
     */
 
-    a.push_back( CouchFine::cjv( v ) );
+    a.push_back( typelib::json::cjv( v ) );
     return a;
 }

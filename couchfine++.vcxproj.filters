@@ -19,9 +19,6 @@
     <Filter Include="Заголовочные файлы\external">
       <UniqueIdentifier>{7a55af89-1c78-4441-b41a-6d097732fbd5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Заголовочные файлы\external\tinyjson">
-      <UniqueIdentifier>{91404873-1053-4bf3-9c5d-792d14ad13fb}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Файлы исходного кода\external">
       <UniqueIdentifier>{1752c3d0-5034-40fa-a15a-27e8239105a1}</UniqueIdentifier>
     </Filter>
@@ -33,9 +30,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="external\tinyjson\tinyjson.hpp">
-      <Filter>Заголовочные файлы\external\tinyjson</Filter>
-    </ClInclude>
     <ClInclude Include="external\plustache\include\context.hpp">
       <Filter>Заголовочные файлы\external\plustache</Filter>
     </ClInclude>

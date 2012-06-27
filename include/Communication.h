@@ -12,8 +12,6 @@
 */
 
 
-// @todo optimize live Заменить tinyjson на живую и свежую альтернативу.
-
 namespace CouchFine {
 
 /**
@@ -28,7 +26,7 @@ inline void transformObject( Variant* var ) {
             transformObject( &itr->second );
         }
         const Object& obj = Object( oldObj );
-        *var = cjv( obj );
+        *var = typelib::json::cjv( obj );
 
     } else if (type == typeid( Array )) {
         // список может содержать другие объекты
@@ -195,6 +193,8 @@ public:
     */
     static const std::map< std::string, std::string >  FROM_RFC1738;
 
+    static const std::map< std::string, std::string >  FROM_RFC1738_SLASH;
+
 
 public:
 
@@ -319,7 +319,7 @@ inline std::ostream& operator<<(
     std::ostream& out,
     const CouchFine::indentObject_t& value
 ) {
-    out << CouchFine::indentVariant_t( value.first, CouchFine::cjv( value.second ) );
+    out << CouchFine::indentVariant_t( value.first, typelib::json::cjv( value.second ) );
     return out;
 }
 

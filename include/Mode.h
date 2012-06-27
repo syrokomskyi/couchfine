@@ -57,7 +57,7 @@ private:
             store->createBulk( (Array)o );
         }
         inline void saveSingle( Database& store ) const {
-            store.createDocument( cjv( o ) );
+            store.createDocument( typelib::json::cjv( o ) );
         }
         */
     };

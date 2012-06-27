@@ -1,3 +1,3 @@
-Библиотека для работы с *CouchDB* на C++.
+Р‘РёР±Р»РёРѕС‚РµРєР° РґР»СЏ СЌС„С„РµРєС‚РёРІРЅРѕР№ СЂР°Р±РѕС‚С‹ СЃ *CouchDB* РЅР° C++.
 
-The library for work with *CouchDB* on C++.
+The library for cosy work with *CouchDB* on C++.
