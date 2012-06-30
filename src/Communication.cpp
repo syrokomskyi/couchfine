@@ -162,7 +162,7 @@ void Communication::init( const std::string& url ) {
 
    // (!) Первое подключение к CouchDB после включения компьютера требует
    // неск. секунд. Источник: мой компьютер :)
-   if (curl_easy_setopt( curl, CURLOPT_TIMEOUT, 5 ) != CURLE_OK)
+   if (curl_easy_setopt( curl, CURLOPT_TIMEOUT, 10 ) != CURLE_OK)
       throw Exception( "Unable to set TIMEOUT option." );
 
    baseURL = url;
