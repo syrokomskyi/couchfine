@@ -143,7 +143,9 @@ void Connection::clearDatabase( const std::string& name, bool includeDesign ) {
     // «апоминаем design-документы
     Array designRows;
     if ( !includeDesign ) {
-        const Variant var = comm.getData( "/" + name + "/_all_docs?startkey=\"_design/a\"&endkey=\"_design/z\"" );
+        // @todo ѕроблема, если в design-документах есть кириллица. –азобратьс€ с кодировками.
+        // запомним все design-документы
+        const Variant var = comm.getData( "/" + name + "/_all_docs?startkey=\"_design/\"&endkey=\"_design0\"" );
         const Object obj = boost::any_cast< Object >( *var );
         const Array rows = boost::any_cast< Array >( *obj.at( "rows" ) );
         for (auto itr = rows.cbegin(); itr != rows.cend(); ++itr) {

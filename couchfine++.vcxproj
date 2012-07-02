@@ -133,6 +133,7 @@
     <ClCompile Include="src\Attachment.cpp" />
     <ClCompile Include="src\Communication.cpp" />
     <ClCompile Include="src\Connection.cpp" />
+    <ClCompile Include="src\CouchFine.cpp" />
     <ClCompile Include="src\Database.cpp" />
     <ClCompile Include="src\Document.cpp" />
     <ClCompile Include="src\Exception.cpp" />

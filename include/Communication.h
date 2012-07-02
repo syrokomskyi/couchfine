@@ -287,7 +287,7 @@ public:
 
 
 
-      CURL        *curl;
+      CURL*       curl;
       std::string baseURL;
       std::string buffer;
 };

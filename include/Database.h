@@ -64,10 +64,11 @@ class Database {
 
       std::vector< Document >  listDocuments();
 
-      Document getDocument( const std::string&, const std::string& rev = "" );
+
+      Document getDocument( const uid_t&, const rev_t& rev = "" );
 
 
-      inline bool hasDocument( const std::string& id ) {
+      inline bool hasDocument( const uid_t& id ) {
         // @todo optimize?
         const std::string url = "/" + name + "/" + id;
         const Variant var = comm.getData( url );
@@ -79,51 +80,16 @@ class Database {
 
       
       /**
-      * @param otherKey Список ключей добавляется к основному ключу.
+      * @param key Ключ для выборки. Примеры:
+      *            (1) startkey="_design/a"&endkey="_design/{"
+      *            (2) key=1000
+      *            (3) descending=true&stale=ok
       */
-      inline Object getView(
+      Object getView(
           const std::string& viewName,
           const std::string& designName = "",
-          const std::string& key = "",
-          const std::string& otherKey = ""
-      )  {
-        // Для корректного запроса ключ требует преобразования
-        std::string preparedKey = key;
-        boost::replace_all( preparedKey, "%", "%25" );
-        boost::replace_all( preparedKey, "#", "%23" );
-        /* - @todo Нельзя менять одним махом: могли передать составной ключ.
-        boost::replace_all( preparedKey, "&", "%26" );
-        */
-
-        //const std::string k = a ? preparedKey : ("\"" + preparedKey + "\"");
-        std::string k = "";
-        try {
-            const double t = boost::lexical_cast< double >( preparedKey );
-            k = preparedKey;
-        } catch ( ... ) {
-            const bool a = !preparedKey.empty() && (preparedKey[0] == '[');
-            if ( a ) {
-                k = preparedKey;
-            } else if ( !preparedKey.empty() ) {
-                k = "\"" + preparedKey + "\"";
-            }
-        }
-
-        const std::string designUID = getDesignUID( designName );
-        const std::string url = "/" + name + "/" + designUID + "/_view/" + viewName +
-            ( k.empty() ? "" : ("?key=" + k) ) +
-            ( otherKey.empty() ? "" : ( ( k.empty() ? "?" : "&") + otherKey ) );
-
-        const Variant var = comm.getData( url );
-        //const auto t = var->type().name();
-        const Object obj = boost::any_cast< Object >( *var );
-        if ( hasError( obj ) ) {
-            throw Exception( "View '" + viewName + "': " + error( obj ) );
-        }
-
-        return obj;
-    }
-
+          const std::string& key = ""
+      );
 
 
 
@@ -209,8 +175,10 @@ class Database {
 
 
 
-   protected:
-      Communication& getCommunication();
+      inline Communication& getCommunication() {
+          return comm;
+      }
+
 
 
 

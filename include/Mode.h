@@ -4,6 +4,7 @@
 #include "type.h"
 #include "Pool.h"
 #include "Exception.h"
+#include <vector>
 
 
 namespace CouchFine {
@@ -63,17 +64,32 @@ private:
     };
 
 
+
+
     /**
     * Базовая структура для получения объектов из хранилища.
     */
     struct Load {
         // Название design-документа
         const std::string design;
+
         // Название представления к которому следует сделать запрос
         const std::string view;
-        // Строковой ключ для выборки из представления
-        // @see http://wiki.apache.org/couchdb/HTTP_view_API?action=show&redirect=HttpViewApi
-        // @see http://wiki.apache.org/couchdb/View_collation
+
+        /**
+        * Для выборки из представления используется строка вида
+        * "ключ1=значение1&ключ2=значение2&...".
+        * Примеры:
+        *   (1) startkey="_design/a"&endkey="_design/{"
+        *   (2) key=1000
+        *   (3) descending=true&stale=ok
+        *
+        * @see http://wiki.apache.org/couchdb/HTTP_view_API
+        * @see http://wiki.apache.org/couchdb/View_collation
+        *
+        * (!) Ключ 'keys' может использоваться только в POST-запросах.
+        * @see http://wiki.apache.org/couchdb/HTTP_view_API#Querying_Options
+        */
         const std::string key;
 
         // Признак: вместе с результатом возвращать связанный с представлением документ
@@ -84,19 +100,49 @@ private:
         const size_t limit;
 
         // Результат
+        // (!) При использовании ключей limit / offset, значение 'totalRows'
+        // не совпадает с 'result.count()'; 'totalRows' - это кол-во, записей,
+        // которое *может* возвратить представление.
+        size_t totalRows;
         Array result;
         bool ok;
         std::shared_ptr< Exception >  exception;
 
-        inline Load( const std::string& design, const std::string& view, const std::string& key, bool withDoc, size_t limit ) :
+
+        inline Load(
+            const std::string& design,
+            const std::string& view,
+            const std::string& key,
+            bool withDoc,
+            size_t limit
+        ) :
             design( design ), view( view ), key( key ),
             withDoc( withDoc ),
+            limit( limit ),
+            ok( false ), exception( nullptr )
+        {
+#ifdef _DEBUG
+            if ( !key.empty() ) {
+                assert( ( (key[0] != '?') && (key[0] != '&') )
+                    && "Строка ключей не должна начинаться на '?' или '&'." );
+                assert( (key.find( '=' ) != std::string::npos)
+                    && "Строка ключей должна содержать строку вида 'ключ1=значение1&ключ2=значение2&...'." );
+            }
+#endif
+        };
+
+
+        inline Load( size_t limit ) :
+            design(), view(), key(),
+            withDoc( true ),
             limit( limit ),
             ok( false ), exception( nullptr )
         {
         };
 
     };
+
+
 
 
 public:
@@ -145,6 +191,7 @@ public:
 
 
 
+
     /**
     * Обращается к представлению для получения списка документов.
     *
@@ -162,6 +209,33 @@ public:
             assert ( !view.empty() && "Название представления должно быть указано." );
         };
     };
+
+
+
+
+    /**
+    * Обращается к хранилищу для получения списка документов.
+    *
+    * @param  Вместе с результатом возвращает связанные с
+    *        представлением документы.
+    */
+    struct Doc : public Load {
+        /**
+        * Список UID для запроса документов.
+        */
+        const std::vector< typelib::uid_t >&  uid;
+
+        inline Doc(
+            const std::vector< typelib::uid_t >&  uid,
+            size_t limit = 0
+        ) :
+            Load( limit ),
+            uid( uid )
+        {
+            assert ( !uid.empty() && "Название представления должно быть указано." );
+        };
+    };
+
 
 
 

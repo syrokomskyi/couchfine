@@ -1,6 +1,8 @@
 #include "../include/Mode.h"
 #include "../include/Database.h"
 #include "../include/Exception.h"
+#include <hash.h>
+#include <codepage.h>
 
 
 using namespace CouchFine;
@@ -98,9 +100,9 @@ std::vector< Document >  Database::listDocuments() {
 
 
 
-Document Database::getDocument( const std::string& id, const std::string& rev ) {
+Document Database::getDocument( const uid_t& id, const rev_t& rev ) {
 
-    std::string url = "/" + name + "/" + id + ( rev.empty() ? "" : ("?rev=" + rev) );
+    const std::string url = "/" + name + "/" + id + ( rev.empty() ? "" : ("?rev=" + rev) );
 
     // (!) ÷елые числа хран€тс€ как знаковый тип, при превышении лимита - исключение
     const Variant var = comm.getData( url );
@@ -117,6 +119,67 @@ Document Database::getDocument( const std::string& id, const std::string& rev ) 
         CouchFine::revision( obj )
     );
 }
+
+
+
+
+
+
+CouchFine::Object Database::getView(
+    const std::string& viewName,
+    const std::string& designName,
+    const std::string& key
+) {
+    const std::string designUID = getDesignUID( designName );
+    std::string url = "/" + name + "/" + designUID + "/_view/" + viewName;
+    if ( !key.empty() ) {
+        /* - Ќе об€зательно. ќпущено.
+        // перекодируем ключ
+        std::string k = key;
+        boost::replace_all( k, "\"", "%22" );
+        boost::replace_all( k, "[", "%5B" );
+        boost::replace_all( k, "]", "%5D" );
+        url += "?" + k;
+        */
+        url += "?" + key;
+    }
+
+
+#if 0
+    // @test 1 ћучени€ с кодировками, ох...
+    url = "/" + name + "/" + designUID + "/_view/" + viewName
+        //+ "?startkey=[\"rus\"]&endkey=[\"rusабвгдеЄжзийклмнопрстуфхцчшщъыьэю€јЅ¬√ƒ≈®∆«»… ЋћЌќѕ–—“”‘’÷„ЎўЏџ№Ёёя\",{}]";
+        + "?startkey=[\"rus\"]&endkey=[\"rus\",{}]";
+    url = typelib::convert::codepage::cyrillicEncode( url );
+    boost::replace_all( url, "\"", "%22" );
+    boost::replace_all( url, "[", "%5B" );
+    boost::replace_all( url, "]", "%5D" );
+#endif
+
+#if 0
+    // @test 2 ћучени€ с кодировками, ух...
+    const std::string name = "абвгдеЄжзийклмнопрстуфхцчшщъыьэю€ јЅ¬√ƒ≈®∆«»… ЋћЌќѕ–—“”‘’÷„ЎўЏџ№Ёёя";
+    //const std::string name = "abcd ABCD ‘";
+    const std::string nameCyrEnc = typelib::convert::codepage::cyrillicEncode( name );
+    const std::string hashName = typelib::hash::sha1( name );
+    const std::string hashNameCyrEnc = typelib::hash::sha1( nameCyrEnc );
+
+    //@result — кириллицей подружить не удалось. —равниваем через SHA1 и
+    //        cyrillicEncode на стороне CouchDB.
+    //        ƒл€ —++ - см. методы hash::searchHash() или Name::searchHash().
+#endif
+
+
+    const Variant var = comm.getData( url );
+    const Object obj = boost::any_cast< Object >( *var );
+    if ( hasError( obj ) ) {
+        throw Exception( "View '" + viewName + "': " + error( obj ) );
+    }
+
+        return obj;
+}
+
+
 
 
 

@@ -165,6 +165,9 @@ void Communication::init( const std::string& url ) {
    if (curl_easy_setopt( curl, CURLOPT_TIMEOUT, 10 ) != CURLE_OK)
       throw Exception( "Unable to set TIMEOUT option." );
 
+   if (curl_easy_setopt( curl, CURLOPT_ENCODING, "gzip,deflate" ) != CURLE_OK)
+      throw Exception( "Unable to set ENCODING option" );
+
    baseURL = url;
 }
 
@@ -317,8 +320,8 @@ void Communication::getRawData(
        preparedData = data;
    }
 
-   // Всегда экранируем символы перевода строки, иначе - ошибка при передаче
-   /* - Не работает: ошибка при передаче.
+   // Экранируем символы перевода строки
+   /* - Не работает: всё равно получаем ошибку при передаче.
    boost::replace_all( preparedData, "\n", "\\n" );
    */
 
@@ -344,8 +347,9 @@ void Communication::getRawData(
       if (presentData && ( (headers.find("Content-Type") == headers.end()) || (headers.find("charset") == headers.end()) ) ) {
             //chunk = curl_slist_append(chunk, "Content-Type: application/json; charset: UTF-8");
             chunk = curl_slist_append( chunk, "Accept: application/json" );
-            chunk = curl_slist_append( chunk, "Content-Type: application/json; charset: UTF-8" );
-            //chunk = curl_slist_append( chunk, "charset: utf-8" );
+            //chunk = curl_slist_append( chunk, "Content-Type: application/json; charset=utf-8" );
+            chunk = curl_slist_append( chunk, "Content-Type: application/json" );
+            chunk = curl_slist_append( chunk, "charsets: utf-8" );
       }
 
       if (curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk) != CURLE_OK)
