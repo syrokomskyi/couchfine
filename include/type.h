@@ -1,7 +1,10 @@
 #pragma once
 
+// @todo fine Библиотека typelib выбрасывает LNK4006 для json::Variant::operator[]().
+//       Сейчас отключено в свойствах проекта. Обойти красиво.
+
 #include "configure.h"
-#include <json-type.h>
+#include <typelib/typelib.h>
 #include <string>
 #include <boost/algorithm/string.hpp>
 #include <boost/function.hpp>

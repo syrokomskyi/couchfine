@@ -1,8 +1,7 @@
 #include "../include/Mode.h"
 #include "../include/Database.h"
 #include "../include/Exception.h"
-#include <hash.h>
-#include <codepage.h>
+#include <typelib/typelib.h>
 
 
 using namespace CouchFine;

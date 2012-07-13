@@ -13,9 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Файлы исходного кода\test">
-      <UniqueIdentifier>{6c8b41ba-e8b9-4267-bc7a-6e18dc029d64}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Заголовочные файлы\external">
       <UniqueIdentifier>{7a55af89-1c78-4441-b41a-6d097732fbd5}</UniqueIdentifier>
     </Filter>
@@ -80,9 +77,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="test\tester.cpp">
-      <Filter>Файлы исходного кода\test</Filter>
-    </ClCompile>
     <ClCompile Include="src\Attachment.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
