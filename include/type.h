@@ -235,7 +235,7 @@ static inline bool hasError( const Object& o ) {
 
 
 static inline bool hasError( const Variant& var ) {
-    return var && (var->type() == typeid( Object ))
+    return (var->type() == typeid( Object ))
         && hasError( boost::any_cast< Object >( *var ) );
 }
 
