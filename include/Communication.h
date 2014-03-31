@@ -103,7 +103,7 @@ inline void printHelper( std::ostream& out, const boost::any& value, const std::
              : *boost::any_cast< Object* >( val );
 
          out << "{";
-#ifdef COUCH_DB_DEBUG
+#ifdef COUCHFINE_DEBUG
          out << std::endl;
 #endif
 
@@ -116,17 +116,17 @@ inline void printHelper( std::ostream& out, const boost::any& value, const std::
             } else {
                addComma = true;
             }
-#ifdef COUCH_DB_DEBUG
+#ifdef COUCHFINE_DEBUG
             out << childIndent;
 #endif
             out << '"' << data->first << "\": ";
             printHelper( out, *data->second, childIndent );
-#ifdef COUCH_DB_DEBUG
+#ifdef COUCHFINE_DEBUG
             out << std::endl;
 #endif
          }
 
-#ifdef COUCH_DB_DEBUG
+#ifdef COUCHFINE_DEBUG
          out << indent;
 #endif
          out << "}";
@@ -135,7 +135,7 @@ inline void printHelper( std::ostream& out, const boost::any& value, const std::
          Array array = boost::any_cast<Array>(value);
 
          out << "[";
-#ifdef COUCH_DB_DEBUG
+#ifdef COUCHFINE_DEBUG
          out << std::endl;
 #endif
 
@@ -148,16 +148,16 @@ inline void printHelper( std::ostream& out, const boost::any& value, const std::
             } else {
                addComma = true;
             }
-#ifdef COUCH_DB_DEBUG
+#ifdef COUCHFINE_DEBUG
             out << childIndent;
 #endif
             printHelper(out, **data, childIndent);
-#ifdef COUCH_DB_DEBUG
+#ifdef COUCHFINE_DEBUG
             out << std::endl;
 #endif
          }
 
-#ifdef COUCH_DB_DEBUG
+#ifdef COUCHFINE_DEBUG
          out << indent;
 #endif
          out << "]";

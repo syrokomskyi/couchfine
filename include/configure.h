@@ -21,7 +21,8 @@
 * How max elements prepare to bulkSave before save.
 * @see createBulk( CouchFine::Object )
 */
-#define ACC_SIZE 1000
+static const size_t ACC_SIZE = 1000;
+static const size_t ACC_PLAIN_SIZE = 1024 * 1000;
 
 
 /**
@@ -41,7 +42,7 @@
 /**
 * Print debug information.
 */
-#define COUCH_DB_DEBUG
+//#define COUCHFINE_DEBUG
 
 
 #include <assert.h>

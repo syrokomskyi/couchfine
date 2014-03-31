@@ -78,7 +78,7 @@ static Variant parseData( const std::string& buffer ) {
    */
 
 
-#ifdef COUCH_DB_DEBUG
+#ifdef COUCHFINE_DEBUG
    std::cout << "Data:" << std::endl
              << var << std::endl;
 #endif
@@ -328,8 +328,8 @@ void Communication::getRawData(
    const long sizePreparedData = static_cast< long >( preparedData.size() );
 
 
-#ifdef COUCH_DB_DEBUG
-   std::cout << "Getting data: " << url << " [" << method << "]" << std::endl;
+#ifdef COUCHFINE_DEBUG
+   //std::cout << "Getting data: " << url << " [" << method << "]" << std::endl;
 #endif
 
    buffer.clear();
@@ -363,8 +363,8 @@ void Communication::getRawData(
       throw Exception( "Unable to set URL: " + url );
 
    if( presentData ) {
-#ifdef COUCH_DB_DEBUG
-      std::cout << "Sending data: " << preparedData << std::endl;
+#ifdef COUCHFINE_DEBUG
+      //std::cout << "Sending data: " << preparedData << std::endl;
 #endif
 
       if (curl_easy_setopt(curl, CURLOPT_READFUNCTION, reader) != CURLE_OK)
@@ -402,13 +402,13 @@ void Communication::getRawData(
          throw Exception( "Unable to reset custom headers" );
    }
 
-#ifdef COUCH_DB_DEBUG
+#ifdef COUCHFINE_DEBUG
    long responseCode;
    if (curl_easy_getinfo( curl, CURLINFO_RESPONSE_CODE, &responseCode ) != CURLE_OK)
       throw Exception( "Unable to get response code" );
 
-   std::cout << "Response code: " << responseCode << std::endl;
-   std::cout << "Raw buffer: " << buffer;
+   //std::cout << "Response code: " << responseCode << std::endl;
+   //std::cout << "Raw buffer: " << buffer;
 #endif
 
 }
