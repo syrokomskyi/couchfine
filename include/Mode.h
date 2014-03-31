@@ -153,8 +153,8 @@ public:
     * Если UID д. не указан, создаётся новый документ.
     */
     struct NewOnly : public Save {
-        inline NewOnly( Object& o, fnCreateJSON_t fnCreateJSON ) : Save( o, fnCreateJSON ) {};
-        inline NewOnly( Pool& p, fnCreateJSON_t fnCreateJSON ) : Save( p, fnCreateJSON ) {};
+        inline NewOnly( Object& o, fnCreateJSON_t fnCreateJSON = fnCreateJSON_t() ) : Save( o, fnCreateJSON ) {};
+        inline NewOnly( Pool& p, fnCreateJSON_t fnCreateJSON = fnCreateJSON_t() ) : Save( p, fnCreateJSON ) {};
     };
 
     /**
@@ -163,8 +163,8 @@ public:
     * Если UID д. не указан, создаётся новый документ.
     */
     struct NewSkip : public Save {
-        inline NewSkip( Object& o, fnCreateJSON_t fnCreateJSON ) : Save( o, fnCreateJSON ) {};
-        inline NewSkip( Pool& p, fnCreateJSON_t fnCreateJSON ) : Save( p, fnCreateJSON ) {};
+        inline NewSkip( Object& o, fnCreateJSON_t fnCreateJSON = fnCreateJSON_t() ) : Save( o, fnCreateJSON ) {};
+        inline NewSkip( Pool& p, fnCreateJSON_t fnCreateJSON = fnCreateJSON_t() ) : Save( p, fnCreateJSON ) {};
     };
 
     /** - @todo Собирать индекс отправленных серверу UID, отправлять только новые.
@@ -185,8 +185,8 @@ public:
     * доступа к нему.
     */
     struct NewUpdate : public Save {
-        inline NewUpdate( Object& o, fnCreateJSON_t fnCreateJSON ) : Save( o, fnCreateJSON ) {};
-        inline NewUpdate( Pool& p, fnCreateJSON_t fnCreateJSON ) : Save( p, fnCreateJSON ) {};
+        inline NewUpdate( Object& o, fnCreateJSON_t fnCreateJSON = fnCreateJSON_t() ) : Save( o, fnCreateJSON ) {};
+        inline NewUpdate( Pool& p, fnCreateJSON_t fnCreateJSON = fnCreateJSON_t() ) : Save( p, fnCreateJSON ) {};
     };
 
 
