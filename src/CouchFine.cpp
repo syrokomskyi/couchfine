@@ -219,6 +219,9 @@ Database& operator<<(
         // Сохраняем документы и файлы-вложения
         // Сохраним скопом; д. с ошибками ревизий - обновим
         Array& a = static_cast< Array& >( *doc.p );
+        // #! @todo Здесь выбрасывается ошибка?
+        //    1. doc не должен быть const.
+        //    2. doc должен состоять из typelib::json::variant.
         const Array result = store.createBulk( a, doc.fnCreateJSON );
         // Смотрим ошибки, обновляем UID и REV, собираем документы
         // для повторного сброса в хранилище
