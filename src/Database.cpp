@@ -36,6 +36,8 @@ Database::Database(const Database &db)
 
 
 Database::~Database() {
+    // сохраним буферы на случай, если этого не сделали явно
+    flush();
 }
 
 
@@ -274,8 +276,8 @@ Document Database::createDocument( const std::string& json, const std::string& i
 
 
 CouchFine::Array Database::createBulk(
-    const CouchFine::Array& docs,
-    CouchFine::fnCreateJSON_t fnCreateJSON
+    const CouchFine::Array&    docs,
+    CouchFine::fnCreateJSON_t  fnCreateJSON
 ) {
     // I. Сохраним документы.
 
@@ -285,8 +287,11 @@ CouchFine::Array Database::createBulk(
     for (auto itr = docs.cbegin(); itr != docs.cend(); ++itr) {
 #ifdef _DEBUG
         const std::string& typeName = (*itr)->type().name();
+        auto t1 = *itr;
+        auto t2 = *t1;
 #endif
-        const Object* d = boost::any_cast< Object* >( **itr );
+        // #! Ошибка? Убедитесь, что сюда не попал const-объект.
+        Object* d = boost::any_cast< Object* >( **itr );
         // просматриваем поля, ставляем те, что без Mode::File::PREFIX
         Object obj;
         for (auto dtr = d->cbegin(); dtr != d->cend(); ++dtr) {
@@ -304,42 +309,20 @@ CouchFine::Array Database::createBulk(
 
     // @see http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API#Modify_Multiple_Documents_With_a_Single_Request
     Object o;
-    //o["docs"] = typelib::json::cjv( docs );
     o["docs"] = typelib::json::cjv( preparedDocs );
     const std::string json = fnCreateJSON
         ? ( fnCreateJSON )( typelib::json::cjv( o ) )
         : createJSON( typelib::json::cjv( o ) );
-    //std::cout << std::endl << typelib::json::cjv( o ) << std::endl << std::endl;
 
+    // @see http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API#Modify_Multiple_Documents_With_a_Single_Request
+    assert( !name.empty()
+        && "Store is don't initialized." );
     const Variant var = comm.getData( "/" + name + "/_bulk_docs",  "POST",  json );
     if ( hasError( var ) ) {
         std::cerr << "JSON: " << json << std::endl;
-        std::cerr << "CouchFine::operator<<( Database, NewUpdate ) " << error( var ) << std::endl;
+        std::cerr << "CouchFine::createBulk( const std::string& ) " << error( var ) << std::endl;
         throw CouchFine::Exception( "Unrecognized exception: " + error( var ) );
     }
-
-    //std::cout << std::endl << var << std::endl << std::endl;
-    /* - Быстрее. Проще. Обходимся.
-    transformObject( &var );
-    */
-
-    // @todo fine Если сбой на сервере, вместо списка с ошибками может
-    //       быть возвращён Object?
-    /* - Лучше вернём результат для анализа: позволит вызвавшему методу
-         самому решить, что делать с ошибками (часто - несовпадение ревизий).
-    // При удачном завершении (см. catch ниже) получим список ключей CouchFine::Array
-    const CouchFine::Array a = boost::any_cast< CouchFine::Array >( *var );
-    // При неудачном - вместо ключей получим объекты с информ. об ошибках
-    for (auto itr = a.cbegin(); itr != a.cend(); ++itr) {
-        const auto& type = itr->get()->type();
-        if (type == typeid( Object )) {
-            // ошибка, однозначно
-            std::cerr << typelib::json::cjv( a );
-            const CouchFine::Object obj = boost::any_cast< CouchFine::Object >( *itr );
-            throw Exception( "Part of set of documents could not be created. First error: " + obj.error() );
-        }
-    }
-    */
 
     const Array ra = boost::any_cast< Array >( *var );
 
@@ -394,22 +377,21 @@ CouchFine::Array Database::createBulk(
 
 
 std::string Database::createBulk(
-    const CouchFine::Object& doc,
-    CouchFine::fnCreateJSON_t fnCreateJSON
+    const CouchFine::Object&   doc,
+    CouchFine::fnCreateJSON_t  fnCreateJSON
 ) {
-
-    // Проверяем, что в запасе ещё есть UID для докментов
+    // проверяем, что в запасе ещё есть UID для документов
     if (accUID.size() == 0) {
         accUID = getUUIDs( 100 );
     }
 
-    // Назначаем документу ID в хранилище
+    // назначаем документу ID в хранилище
     CouchFine::Object o = doc;
     const std::string id = accUID.back();
     accUID.pop_back();
     o["_id"] = typelib::json::cjv( id );
 
-    // Добавляем документ в аккумулятор и проверяем, не пора ли сохранить
+    // добавляем документ в аккумулятор и проверяем, не пора ли сохранить
     // накопленные документы
     acc.push_back( typelib::json::cjv( doc ) );
     if (acc.size() >= ACC_SIZE) {
@@ -420,6 +402,51 @@ std::string Database::createBulk(
     return id;
 }
 
+
+
+
+void Database::createBulk( const std::string&  plainDoc ) {
+
+    // # UID документу не назначаются.
+
+    // добавляем документ в аккумулятор и проверяем, не пора ли сохранить
+    // накопленные документы
+    accPlain += (accPlain.empty() ? "[ " : ", ") + plainDoc;
+    if (accPlain.size() >= ACC_PLAIN_SIZE) {
+        flush();
+        return;
+    }
+
+    // продолжаем накапливать
+}
+
+
+
+
+void Database::flush( CouchFine::fnCreateJSON_t fnCreateJSON ) {
+
+    // у нас 2 накопителя
+    // @todo fine Пересмотреть архитектуру.
+    if ( !acc.empty() ) {
+        createBulk( acc, fnCreateJSON );
+        acc.clear();
+    }
+
+    if ( !accPlain.empty() ) {
+        // @see http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API#Modify_Multiple_Documents_With_a_Single_Request
+        assert( !name.empty()
+            && "Store is don't initialized." );
+        // @see Формирование 'accPlain' в createBulk( const std::string& ).
+        accPlain = "{ \"docs\": " + accPlain + " ] }";
+        const Variant var = comm.getData( "/" + name + "/_bulk_docs",  "POST",  accPlain );
+        if ( hasError( var ) ) {
+            std::cerr << "JSON: " << accPlain << std::endl;
+            std::cerr << "CouchFine::createBulk( const std::string& ) " << error( var ) << std::endl;
+            throw CouchFine::Exception( "Unrecognized exception: " + error( var ) );
+        }
+        accPlain.clear();
+    }
+}
 
 
 

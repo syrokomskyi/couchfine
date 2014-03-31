@@ -118,6 +118,7 @@ class Database {
       Document createDocument( Variant, const std::vector< Attachment >&, const std::string& id = "" ) const;
       Document createDocument( const std::string& json, const std::string& id = "" ) const;
 
+
       /**
       * Записывает в хранилище набор документов. Работает значительно быстрее
       * записи документов по отдельности.
@@ -127,7 +128,7 @@ class Database {
       */
       CouchFine::Array createBulk(
           const CouchFine::Array& docs,
-          CouchFine::fnCreateJSON_t fnCreateJSON
+          CouchFine::fnCreateJSON_t fnCreateJSON = fnCreateJSON_t()
       );
 
 
@@ -139,8 +140,19 @@ class Database {
       */
       std::string createBulk(
           const CouchFine::Object& doc,
-          CouchFine::fnCreateJSON_t fnCreateJSON
+          CouchFine::fnCreateJSON_t fnCreateJSON = fnCreateJSON_t()
       );
+
+
+      /**
+      * Аналогично createBulk( const Object& ), но ожидает объект,
+      * представленный в виде строки в формате json-списка. Работает
+      * быстрее любого из createBulk() выше.
+      *
+      * # Не анализирует полученный документ: сразу готовит его к сохранению.
+      * # Если для документа UID не указано, он получит новый UID.
+      */
+      void createBulk( const std::string& doc );
 
 
       /**
@@ -148,10 +160,7 @@ class Database {
       *
       * @see createBulk()
       */
-      inline void flush( CouchFine::fnCreateJSON_t fnCreateJSON ) {
-          createBulk( acc, fnCreateJSON );
-          acc.clear();
-      }
+      void flush( CouchFine::fnCreateJSON_t fnCreateJSON = fnCreateJSON_t() );
 
 
 
@@ -184,15 +193,16 @@ class Database {
 
 
    private:
-      Communication& comm;
-      std::string name;
+      Communication&  comm;
+      std::string     name;
 
 
       /**
-      * Аккумулятор для работы метода createBulk( const CouchFine::Object& ).
+      * Аккумуляторы для работы метода createBulk( const CouchFine::Object& ).
       */
-      CouchFine::Array acc;
-      std::vector< std::string >  accUID;
+      CouchFine::Array      acc;
+      std::vector< uid_t >  accUID;
+      std::string           accPlain;
 
 };
 
